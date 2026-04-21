@@ -1,4 +1,12 @@
+mod commands;
+mod services;
 mod tray;
+
+use services::clipboard_monitor::ClipboardMonitor;
+use std::sync::Mutex;
+use tauri::Manager;
+
+pub struct ClipboardMonitorState(Mutex<Option<ClipboardMonitor>>);
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -19,10 +27,20 @@ pub fn run() {
                 )
                 .build(),
         )
+        .manage(ClipboardMonitorState(Mutex::new(None)))
         .setup(|app| {
             tray::create_tray(app)?;
+
+            let monitor = ClipboardMonitor::new(app.handle().clone(), 100);
+            app.state::<ClipboardMonitorState>()
+                .0
+                .lock()
+                .unwrap()
+                .replace(monitor);
+
             Ok(())
         })
+        .invoke_handler(tauri::generate_handler![commands::clipboard::clipboard_write_text,])
         .run(tauri::generate_context!())
         .expect("error while running TinyBox");
 }

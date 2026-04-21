@@ -5036,6 +5036,7 @@ dependencies = [
 name = "tinybox"
 version = "0.1.0"
 dependencies = [
+ "arboard",
  "serde",
  "serde_json",
  "tauri",
