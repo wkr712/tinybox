@@ -128,4 +128,36 @@ impl NcmService {
         let resp = client.cloudsearch(&query).await.map_err(|e| e.to_string())?;
         Ok(resp.body)
     }
+
+    pub async fn personalized(state: &NcmState, limit: i64) -> Result<Value, String> {
+        let cookie = state.get_cookie()?;
+        let client = state.get_client()?;
+        let query = Query::new().param("limit", &limit.to_string()).cookie(&cookie);
+        let resp = client.personalized(&query).await.map_err(|e| e.to_string())?;
+        Ok(resp.body)
+    }
+
+    pub async fn personalized_newsong(state: &NcmState, limit: i64) -> Result<Value, String> {
+        let cookie = state.get_cookie()?;
+        let client = state.get_client()?;
+        let query = Query::new().param("limit", &limit.to_string()).cookie(&cookie);
+        let resp = client.personalized_newsong(&query).await.map_err(|e| e.to_string())?;
+        Ok(resp.body)
+    }
+
+    pub async fn recommend_songs(state: &NcmState) -> Result<Value, String> {
+        let cookie = state.get_cookie()?;
+        let client = state.get_client()?;
+        let query = Query::new().cookie(&cookie);
+        let resp = client.recommend_songs(&query).await.map_err(|e| e.to_string())?;
+        Ok(resp.body)
+    }
+
+    pub async fn search_hot_detail(state: &NcmState) -> Result<Value, String> {
+        let cookie = state.get_cookie()?;
+        let client = state.get_client()?;
+        let query = Query::new().cookie(&cookie);
+        let resp = client.search_hot_detail(&query).await.map_err(|e| e.to_string())?;
+        Ok(resp.body)
+    }
 }

@@ -1,6 +1,6 @@
 import { writable } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
-import type { NcmSong, NcmPlaylist, NcmUser, LyricLine, MusicView } from "../types/music";
+import type { NcmSong, NcmPlaylist, NcmUser, LyricLine, MusicView, HotSearch } from "../types/music";
 
 export const user = writable<NcmUser | null>(null);
 export const playlists = writable<NcmPlaylist[]>([]);
@@ -13,6 +13,14 @@ export const currentView = writable<MusicView>("login");
 export const searchResults = writable<NcmSong[]>([]);
 export const searchQuery = writable("");
 export const volume = writable(0.8);
+
+// v0.7.0 additions
+export const playProgress = writable(0); // seconds elapsed
+export const recommendPlaylists = writable<NcmPlaylist[]>([]);
+export const recommendSongs = writable<NcmSong[]>([]);
+export const hotSearches = writable<HotSearch[]>([]);
+
+let progressTimer: ReturnType<typeof setInterval> | null = null;
 
 export async function generateQr() {
   return await invoke<{ key: string; qrurl: string }>("music_qr_generate");
@@ -75,10 +83,10 @@ export async function playSong(song: NcmSong) {
   await invoke("music_play", { url });
   currentSong.set(song);
   isPlaying.set(true);
+  playProgress.set(0);
+  startProgressTimer();
 
-  // Fetch lyrics
   fetchLyrics(song.id);
-
   return true;
 }
 
@@ -104,36 +112,91 @@ export async function searchSongs(keywords: string) {
   );
 }
 
-export async function togglePlay() {
-  const playing = await invoke<boolean>("music_pause").then(() => false).catch(() => false);
-  if (!playing) {
-    await invoke("music_resume");
-    isPlaying.set(true);
-  } else {
-    await invoke("music_pause");
-    isPlaying.set(false);
-  }
-}
-
 export async function pauseMusic() {
   await invoke("music_pause");
   isPlaying.set(false);
+  stopProgressTimer();
 }
 
 export async function resumeMusic() {
   await invoke("music_resume");
   isPlaying.set(true);
+  startProgressTimer();
 }
 
 export async function stopMusic() {
   await invoke("music_stop");
   isPlaying.set(false);
   currentSong.set(null);
+  playProgress.set(0);
+  stopProgressTimer();
 }
 
 export async function setVolume(vol: number) {
   await invoke("music_set_volume", { volume: vol });
   volume.set(vol);
+}
+
+// v0.7.0: Recommendations
+export async function fetchRecommendPlaylists() {
+  const resp = await invoke<Record<string, any>>("music_personalized", { limit: 12 });
+  if (resp.result) {
+    recommendPlaylists.set(
+      resp.result.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        cover_img_url: p.picUrl || "",
+        track_count: p.trackCount || 0,
+        creator: p.copywriter || "",
+      }))
+    );
+  }
+}
+
+export async function fetchRecommendSongs() {
+  const resp = await invoke<Record<string, any>>("music_recommend_songs");
+  const songs = resp.data?.dailySongs || resp.data || [];
+  if (Array.isArray(songs)) {
+    recommendSongs.set(
+      songs.slice(0, 20).map((s: any) => ({
+        id: s.id,
+        name: s.name,
+        artists: (s.ar || []).map((a: any) => a.name).join(" / "),
+        album: s.al?.name || "",
+        album_id: s.al?.id || 0,
+        duration: s.dt || 0,
+        pic_url: s.al?.picUrl || "",
+      }))
+    );
+  }
+}
+
+export async function fetchHotSearches() {
+  const resp = await invoke<Record<string, any>>("music_search_hot");
+  if (resp.data) {
+    hotSearches.set(
+      resp.data.map((h: any) => ({
+        search_word: h.searchWord || "",
+        score: h.score || 0,
+        content: h.content || "",
+      }))
+    );
+  }
+}
+
+// Progress tracking
+function startProgressTimer() {
+  stopProgressTimer();
+  progressTimer = setInterval(() => {
+    playProgress.update((p) => p + 0.2);
+  }, 200);
+}
+
+function stopProgressTimer() {
+  if (progressTimer) {
+    clearInterval(progressTimer);
+    progressTimer = null;
+  }
 }
 
 function parseLrc(lrc: string): LyricLine[] {

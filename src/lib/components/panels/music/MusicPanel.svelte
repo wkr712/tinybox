@@ -9,6 +9,7 @@
   import TrackList from "./TrackList.svelte";
   import NowPlaying from "./NowPlaying.svelte";
   import SearchView from "./SearchView.svelte";
+  import DiscoverView from "./DiscoverView.svelte";
 
   let u: any = null;
   user.subscribe((v) => (u = v));
@@ -25,22 +26,10 @@
   onMount(async () => {
     const ok = await fetchLoginStatus();
     if (ok && u) {
-      currentView.set("playlists");
+      currentView.set("discover");
       await fetchUserPlaylists(u.user_id);
     }
   });
-
-  function goSearch() {
-    currentView.set("search");
-  }
-
-  async function toggleMiniPlay() {
-    if (playing) {
-      await pauseMusic();
-    } else {
-      await resumeMusic();
-    }
-  }
 </script>
 
 <div class="h-full flex flex-col">
@@ -48,11 +37,15 @@
   {#if view !== "login"}
     <div class="flex items-center gap-1 pb-2 border-b border-white/5 mb-2">
       <button
+        onclick={() => currentView.set('discover')}
+        class="px-2 py-1 text-[10px] rounded {view === 'discover' ? 'text-accent-cyan bg-accent-cyan/10' : 'text-white/30 hover:text-white/50'}"
+      >发现</button>
+      <button
         onclick={() => currentView.set('playlists')}
         class="px-2 py-1 text-[10px] rounded {view === 'playlists' ? 'text-accent-cyan bg-accent-cyan/10' : 'text-white/30 hover:text-white/50'}"
       >歌单</button>
       <button
-        onclick={goSearch}
+        onclick={() => currentView.set('search')}
         class="px-2 py-1 text-[10px] rounded {view === 'search' ? 'text-accent-cyan bg-accent-cyan/10' : 'text-white/30 hover:text-white/50'}"
       >搜索</button>
       {#if song}
@@ -68,6 +61,8 @@
   <div class="flex-1 overflow-hidden">
     {#if view === "login"}
       <QrLogin />
+    {:else if view === "discover"}
+      <DiscoverView />
     {:else if view === "playlists"}
       <PlaylistView />
     {:else if view === "tracks"}

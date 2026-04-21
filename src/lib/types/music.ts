@@ -27,4 +27,10 @@ export interface LyricLine {
   text: string;
 }
 
-export type MusicView = "login" | "playlists" | "tracks" | "search" | "nowplaying";
+export type MusicView = "login" | "playlists" | "tracks" | "search" | "nowplaying" | "discover";
+
+export interface HotSearch {
+  search_word: string;
+  score: number;
+  content: string;
+}

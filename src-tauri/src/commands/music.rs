@@ -90,3 +90,23 @@ pub fn music_stop(state: State<'_, AudioState>) -> Result<(), String> {
 pub fn music_set_volume(state: State<'_, AudioState>, volume: f32) -> Result<(), String> {
     AudioPlayer::set_volume(&state, volume)
 }
+
+#[tauri::command]
+pub async fn music_personalized(state: State<'_, NcmState>, limit: i64) -> Result<serde_json::Value, String> {
+    NcmService::personalized(&state, limit).await
+}
+
+#[tauri::command]
+pub async fn music_personalized_newsong(state: State<'_, NcmState>, limit: i64) -> Result<serde_json::Value, String> {
+    NcmService::personalized_newsong(&state, limit).await
+}
+
+#[tauri::command]
+pub async fn music_recommend_songs(state: State<'_, NcmState>) -> Result<serde_json::Value, String> {
+    NcmService::recommend_songs(&state).await
+}
+
+#[tauri::command]
+pub async fn music_search_hot(state: State<'_, NcmState>) -> Result<serde_json::Value, String> {
+    NcmService::search_hot_detail(&state).await
+}

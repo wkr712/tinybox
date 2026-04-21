@@ -1,12 +1,21 @@
 <script lang="ts">
-  import { searchQuery, searchResults, searchSongs, playSong, formatDuration } from "../../../stores/music";
-  import { currentView } from "../../../stores/music";
+  import { onMount } from "svelte";
+  import {
+    searchResults, searchSongs, playSong, formatDuration,
+    currentView, hotSearches, fetchHotSearches,
+  } from "../../../stores/music";
 
   let query = $state("");
-  searchQuery.subscribe((v) => (query = v));
 
   let results: any[] = [];
   searchResults.subscribe((v) => (results = v));
+
+  let hot: any[] = [];
+  hotSearches.subscribe((v) => (hot = v));
+
+  onMount(() => {
+    if (hot.length === 0) fetchHotSearches();
+  });
 
   function handleSearch() {
     if (query.trim()) {
@@ -16,6 +25,11 @@
 
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === "Enter") handleSearch();
+  }
+
+  function handleHotClick(word: string) {
+    query = word;
+    searchSongs(word);
   }
 </script>
 
@@ -38,21 +52,43 @@
     </div>
   </div>
 
-  <div class="flex-1 overflow-y-auto space-y-0.5">
-    {#each results as track (track.id)}
-      <button
-        onclick={() => playSong(track)}
-        class="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-white/[0.03] transition-colors text-left"
-      >
-        <div class="flex-1 min-w-0">
-          <div class="text-xs text-white/75 truncate">{track.name}</div>
-          <div class="text-[10px] text-white/25 truncate">{track.artists} · {track.album}</div>
+  <div class="flex-1 overflow-y-auto">
+    {#if results.length > 0}
+      <div class="space-y-0.5">
+        {#each results as track (track.id)}
+          <button
+            onclick={() => playSong(track)}
+            class="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-white/[0.03] transition-colors text-left"
+          >
+            <div class="flex-1 min-w-0">
+              <div class="text-xs text-white/75 truncate">{track.name}</div>
+              <div class="text-[10px] text-white/25 truncate">{track.artists} · {track.album}</div>
+            </div>
+            <span class="text-[10px] text-white/15 shrink-0">{formatDuration(track.duration)}</span>
+          </button>
+        {/each}
+      </div>
+    {:else if hot.length > 0}
+      <div class="px-1">
+        <div class="text-[10px] text-white/20 mb-2">热搜榜</div>
+        <div class="space-y-0.5">
+          {#each hot.slice(0, 15) as h, i (h.search_word)}
+            <button
+              onclick={() => handleHotClick(h.search_word)}
+              class="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-white/[0.03] transition-colors text-left"
+            >
+              <span class="text-[10px] w-4 text-right shrink-0 {i < 3 ? 'text-accent-cyan' : 'text-white/15'}">{i + 1}</span>
+              <div class="flex-1 min-w-0">
+                <div class="text-[11px] text-white/60 truncate">{h.search_word}</div>
+                {#if h.content}
+                  <div class="text-[9px] text-white/15 truncate">{h.content}</div>
+                {/if}
+              </div>
+            </button>
+          {/each}
         </div>
-        <span class="text-[10px] text-white/15 shrink-0">{formatDuration(track.duration)}</span>
-      </button>
-    {/each}
-
-    {#if results.length === 0 && query}
+      </div>
+    {:else}
       <div class="text-center text-white/15 text-xs py-8">输入关键词搜索歌曲</div>
     {/if}
   </div>

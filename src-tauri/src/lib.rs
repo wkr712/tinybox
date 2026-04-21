@@ -63,6 +63,10 @@ pub fn run() {
             commands::music::music_resume,
             commands::music::music_stop,
             commands::music::music_set_volume,
+            commands::music::music_personalized,
+            commands::music::music_personalized_newsong,
+            commands::music::music_recommend_songs,
+            commands::music::music_search_hot,
         ])
         .run(tauri::generate_context!())
         .expect("error while running TinyBox");
