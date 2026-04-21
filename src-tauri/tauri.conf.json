@@ -1,6 +1,6 @@
 {
   "productName": "TinyBox",
-  "version": "0.1.0",
+  "version": "0.6.0",
   "identifier": "com.tinybox.app",
   "build": {
     "beforeDevCommand": "npm run dev",

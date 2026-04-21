@@ -4,6 +4,7 @@
   import TodoPanel from "./todo/TodoPanel.svelte";
   import ClipboardPanel from "./clipboard/ClipboardPanel.svelte";
   import DropZonePanel from "./dropzone/DropZonePanel.svelte";
+  import MusicPanel from "./music/MusicPanel.svelte";
 
   let current = $state<string | null>(null);
   activePanel.subscribe((v) => (current = v));
@@ -34,7 +35,7 @@
     {:else if current === "dropzone"}
       <DropZonePanel />
     {:else if current === "music"}
-      <div class="text-white/40 text-sm text-center py-12">网易云音乐 - v0.6.0</div>
+      <MusicPanel />
     {/if}
   </div>
 </div>

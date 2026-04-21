@@ -2,7 +2,9 @@ mod commands;
 mod services;
 mod tray;
 
+use services::audio_player::AudioState;
 use services::clipboard_monitor::ClipboardMonitor;
+use services::ncm::NcmState;
 use std::sync::Mutex;
 use tauri::Manager;
 
@@ -28,6 +30,8 @@ pub fn run() {
                 .build(),
         )
         .manage(ClipboardMonitorState(Mutex::new(None)))
+        .manage(NcmState::new())
+        .manage(AudioState::new())
         .setup(|app| {
             tray::create_tray(app)?;
 
@@ -45,6 +49,20 @@ pub fn run() {
             commands::dropzone::dropzone_store,
             commands::dropzone::dropzone_copy_out,
             commands::dropzone::dropzone_delete,
+            commands::music::music_qr_generate,
+            commands::music::music_qr_check,
+            commands::music::music_login_status,
+            commands::music::music_user_playlist,
+            commands::music::music_playlist_detail,
+            commands::music::music_song_url,
+            commands::music::music_song_detail,
+            commands::music::music_lyric,
+            commands::music::music_search,
+            commands::music::music_play,
+            commands::music::music_pause,
+            commands::music::music_resume,
+            commands::music::music_stop,
+            commands::music::music_set_volume,
         ])
         .run(tauri::generate_context!())
         .expect("error while running TinyBox");
