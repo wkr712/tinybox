@@ -40,7 +40,12 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![commands::clipboard::clipboard_write_text,])
+        .invoke_handler(tauri::generate_handler![
+            commands::clipboard::clipboard_write_text,
+            commands::dropzone::dropzone_store,
+            commands::dropzone::dropzone_copy_out,
+            commands::dropzone::dropzone_delete,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running TinyBox");
 }
