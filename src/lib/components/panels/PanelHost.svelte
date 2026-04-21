@@ -1,6 +1,7 @@
 <script lang="ts">
   import { activePanel } from "../../stores/app";
   import NotesPanel from "./notes/NotesPanel.svelte";
+  import TodoPanel from "./todo/TodoPanel.svelte";
 
   let current = $state<string | null>(null);
   activePanel.subscribe((v) => (current = v));
@@ -25,7 +26,7 @@
     {#if current === "notes"}
       <NotesPanel />
     {:else if current === "todo"}
-      <div class="text-white/40 text-sm text-center py-12">待办计时 - v0.3.0</div>
+      <TodoPanel />
     {:else if current === "clipboard"}
       <div class="text-white/40 text-sm text-center py-12">剪贴板历史 - v0.4.0</div>
     {:else if current === "dropzone"}
