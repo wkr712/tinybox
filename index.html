@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TinyBox</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: transparent;
+        overflow: hidden;
+        height: 100vh;
+        user-select: none;
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div data-tauri-drag-region style="position: fixed; top: 0; left: 0; right: 0; height: 8px; z-index: 9999"></div>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
