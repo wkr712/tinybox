@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { activePanel, expanded } from "../../stores/app";
+  import { activePanel, expandWindow, collapseWindow } from "../../stores/app";
+  import { currentSong, isPlaying, pauseMusic, resumeMusic } from "../../stores/music";
 
   const panels = [
     { id: "notes", icon: "M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z", label: "便签" },
@@ -10,16 +11,30 @@
   ];
 
   let current = $state<string | null>(null);
+  activePanel.subscribe((v) => (current = v));
 
-  function selectPanel(id: string) {
+  let song: any = null;
+  currentSong.subscribe((v) => (song = v));
+
+  let playing = $state(false);
+  isPlaying.subscribe((v) => (playing = v));
+
+  async function selectPanel(id: string) {
     if (current === id) {
-      activePanel.set(null);
-      expanded.set(false);
       current = null;
+      await collapseWindow();
     } else {
-      activePanel.set(id);
-      expanded.set(true);
       current = id;
+      await expandWindow(id);
+    }
+  }
+
+  async function togglePlay(e: MouseEvent) {
+    e.stopPropagation();
+    if (playing) {
+      await pauseMusic();
+    } else {
+      await resumeMusic();
     }
   }
 </script>
@@ -36,6 +51,24 @@
       </svg>
     </button>
   {/each}
+
+  <!-- Mini player: shows when collapsed + music playing -->
+  {#if song && current !== "music"}
+    <button
+      onclick={() => selectPanel('music')}
+      class="w-9 h-9 rounded-lg overflow-hidden shrink-0 ring-1 ring-white/10 hover:ring-accent-cyan/30 transition-all relative"
+      title="{song.name} - {song.artists}"
+    >
+      <img src={song.pic_url + '?param=80y80'} alt="" class="w-full h-full object-cover" />
+      <div class="absolute inset-0 bg-black/30 flex items-center justify-center" onclick={togglePlay}>
+        {#if playing}
+          <svg class="w-3 h-3 text-white/80" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        {:else}
+          <svg class="w-3 h-3 text-white/80" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        {/if}
+      </div>
+    </button>
+  {/if}
 
   <div class="flex-1"></div>
 

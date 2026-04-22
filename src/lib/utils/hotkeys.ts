@@ -1,23 +1,23 @@
 import { register, unregister } from "@tauri-apps/plugin-global-shortcut";
 import { settings } from "../stores/settings";
-import { activePanel, expanded } from "../stores/app";
+import { activePanel, expandWindow, collapseWindow } from "../stores/app";
+import { pauseMusic, resumeMusic, currentView, isPlaying } from "../stores/music";
 
 let registered: string[] = [];
 
 export async function registerHotkeys() {
-  // Unregister all existing
   for (const key of registered) {
     try { await unregister(key); } catch { /* ignore */ }
   }
   registered = [];
 
-  const s = getSnapshot();
+  const s = getSettings();
   const hotkeys: Record<string, () => void> = {
     [s.hotkey_toggle_sidebar]: () => toggleSidebar(),
-    [s.hotkey_clipboard]: () => showPanel("clipboard"),
-    [s.hotkey_new_note]: () => showPanel("notes"),
-    [s.hotkey_play_pause]: () => showPanel("music"),
-    [s.hotkey_show_lyrics]: () => showPanel("music"),
+    [s.hotkey_clipboard]: () => expandWindow("clipboard"),
+    [s.hotkey_new_note]: () => expandWindow("notes"),
+    [s.hotkey_play_pause]: () => togglePlayPause(),
+    [s.hotkey_show_lyrics]: () => showLyrics(),
   };
 
   for (const [shortcut, handler] of Object.entries(hotkeys)) {
@@ -33,35 +33,38 @@ export async function registerHotkeys() {
   }
 }
 
-function toggleSidebar() {
-  expanded.update((v) => !v);
-  if (!getSnapshot_expanded()) {
-    // If collapsing, clear panel
+async function toggleSidebar() {
+  let panel: string | null = null;
+  const unsub = activePanel.subscribe((v) => { panel = v; });
+  unsub();
+
+  if (panel) {
+    await collapseWindow();
+  } else {
+    await expandWindow("notes");
   }
 }
 
-function showPanel(panel: string) {
-  expanded.set(true);
-  activePanel.set(panel);
+async function togglePlayPause() {
+  let playing = false;
+  const unsub = isPlaying.subscribe((v) => { playing = v; });
+  unsub();
+
+  if (playing) {
+    await pauseMusic();
+  } else {
+    await resumeMusic();
+  }
 }
 
-function getSnapshot(): ReturnType<typeof getSettingsSnapshot> {
+async function showLyrics() {
+  await expandWindow("music");
+  currentView.set("nowplaying");
+}
+
+function getSettings(): Record<string, string> {
   let s: any = {};
   const unsub = settings.subscribe((v) => { s = v; });
   unsub();
   return s;
-}
-
-function getSettingsSnapshot() {
-  let s: any = {};
-  const unsub = settings.subscribe((v) => { s = v; });
-  unsub();
-  return s;
-}
-
-function getSnapshot_expanded(): boolean {
-  let v = false;
-  const unsub = expanded.subscribe((val) => { v = val; });
-  unsub();
-  return v;
 }

@@ -1,16 +1,30 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { settings, saveSetting } from "../../../stores/settings";
+  import { getCurrentWindow } from "@tauri-apps/api/window";
+  import { registerHotkeys } from "../../../utils/hotkeys";
 
   let s: any = {};
   settings.subscribe((v) => (s = v));
 
   let editing: string | null = $state(null);
   let editValue = $state("");
+  let version = $state("0.9.0");
 
-  async function toggle(key: string) {
-    const current = s[key] === "true";
-    await saveSetting(key, current ? "false" : "true");
+  onMount(async () => {
+    try {
+      version = await getCurrentWindow().appWindow?.getSize().then(() => "0.9.0").catch(() => "0.9.0") || "0.9.0";
+      const v = await import("@tauri-apps/api/app");
+      version = await v.getVersion();
+    } catch {
+      // fallback
+    }
+  });
+
+  async function toggleAlwaysOnTop() {
+    const newVal = s.always_on_top !== "true";
+    await saveSetting("always_on_top", newVal ? "true" : "false");
+    await getCurrentWindow().setAlwaysOnTop(newVal);
   }
 
   function startEdit(key: string) {
@@ -21,6 +35,7 @@
   async function saveEdit(key: string) {
     if (editValue.trim()) {
       await saveSetting(key, editValue.trim());
+      await registerHotkeys();
     }
     editing = null;
   }
@@ -44,20 +59,13 @@
     <div class="text-[10px] text-white/20 mb-2 px-1">窗口</div>
     <div class="space-y-1">
       <button
-        onclick={() => toggle("always_on_top")}
+        onclick={toggleAlwaysOnTop}
         class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/[0.03] transition-colors"
       >
         <span class="text-xs text-white/60">窗口置顶</span>
         <span class="text-[10px] {s.always_on_top === 'true' ? 'text-accent-cyan' : 'text-white/20'}">
           {s.always_on_top === "true" ? "开" : "关"}
         </span>
-      </button>
-      <button
-        onclick={() => saveSetting('sidebar_edge', s.sidebar_edge === 'left' ? 'right' : 'left')}
-        class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/[0.03] transition-colors"
-      >
-        <span class="text-xs text-white/60">侧边栏位置</span>
-        <span class="text-[10px] text-white/30">{s.sidebar_edge === "left" ? "左侧" : "右侧"}</span>
       </button>
     </div>
   </section>
@@ -67,7 +75,7 @@
     <div class="text-[10px] text-white/20 mb-2 px-1">剪贴板</div>
     <div class="space-y-1">
       <button
-        onclick={() => toggle("clipboard_monitor_enabled")}
+        onclick={() => saveSetting('clipboard_monitor_enabled', s.clipboard_monitor_enabled === 'true' ? 'false' : 'true')}
         class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/[0.03] transition-colors"
       >
         <span class="text-xs text-white/60">剪贴板监听</span>
@@ -151,7 +159,7 @@
   <!-- About -->
   <section class="pt-2 border-t border-white/5">
     <div class="text-center py-2">
-      <div class="text-[10px] text-white/15">TinyBox v0.8.0</div>
+      <div class="text-[10px] text-white/15">TinyBox v{version}</div>
       <div class="text-[9px] text-white/10 mt-0.5">Tauri 2 + Svelte 5 + SQLite</div>
     </div>
   </section>
