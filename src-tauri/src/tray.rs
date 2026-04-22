@@ -21,7 +21,7 @@ pub fn create_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     TrayIconBuilder::new()
         .icon(app.default_window_icon().unwrap().clone())
         .menu(&menu)
-        .tooltip("TinyBox v1.0.0 - 小巧工具箱")
+        .tooltip(format!("TinyBox v{} - 小巧工具箱", env!("CARGO_PKG_VERSION")))
         .on_menu_event(|app, event| match event.id.as_ref() {
             "show" => {
                 if let Some(window) = app.get_webview_window("main") {
