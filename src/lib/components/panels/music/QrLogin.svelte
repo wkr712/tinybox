@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { generateQr, checkQr, fetchLoginStatus, fetchUserPlaylists, currentView, user } from "../../../stores/music";
   import { get } from "svelte/store";
 
@@ -9,12 +9,13 @@
   let pollTimer: ReturnType<typeof setInterval> | null = null;
   let expiryTimer: ReturnType<typeof setTimeout> | null = null;
 
-  onMount(async () => {
-    await startQr();
-    return () => {
-      if (pollTimer) clearInterval(pollTimer);
-      if (expiryTimer) clearTimeout(expiryTimer);
-    };
+  onMount(() => {
+    startQr();
+  });
+
+  onDestroy(() => {
+    if (pollTimer) clearInterval(pollTimer);
+    if (expiryTimer) clearTimeout(expiryTimer);
   });
 
   async function startQr() {

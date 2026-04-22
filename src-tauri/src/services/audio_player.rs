@@ -30,101 +30,122 @@ impl AudioState {
                 .build()
                 .unwrap_or_else(|_| reqwest::blocking::Client::new());
 
-            while let Ok(msg) = rx.recv() {
-                match msg {
-                    AudioMsg::Play(url) => {
-                        if let Some(s) = sink.take() {
-                            s.stop();
-                        }
-                        _stream.take();
-                        _handle.take();
+            loop {
+                match rx.recv_timeout(Duration::from_secs(1)) {
+                    Ok(msg) => match msg {
+                        AudioMsg::Play(url) => {
+                            if let Some(s) = sink.take() {
+                                s.stop();
+                            }
+                            _stream.take();
+                            _handle.take();
 
-                        if let Ok((s, h)) = rodio::OutputStream::try_default() {
-                            if let Ok(new_sink) = rodio::Sink::try_new(&h) {
-                                let mut ok = false;
-                                if url.starts_with("http://") || url.starts_with("https://") {
-                                    if let Some(bytes) = http_client
-                                        .get(&url)
-                                        .send()
-                                        .ok()
-                                        .and_then(|r| r.bytes().ok())
-                                    {
+                            if let Ok((s, h)) = rodio::OutputStream::try_default() {
+                                if let Ok(new_sink) = rodio::Sink::try_new(&h) {
+                                    let mut ok = false;
+                                    if url.starts_with("http://") || url.starts_with("https://") {
+                                        if let Some(bytes) = http_client
+                                            .get(&url)
+                                            .send()
+                                            .ok()
+                                            .and_then(|r| r.bytes().ok())
+                                        {
+                                            if let Ok(source) =
+                                                rodio::Decoder::new(std::io::Cursor::new(bytes))
+                                            {
+                                                new_sink.append(source.convert_samples::<f32>());
+                                                ok = true;
+                                            }
+                                        }
+                                    } else if let Ok(file) = std::fs::File::open(&url) {
                                         if let Ok(source) =
-                                            rodio::Decoder::new(std::io::Cursor::new(bytes))
+                                            rodio::Decoder::new(std::io::BufReader::new(file))
                                         {
                                             new_sink.append(source.convert_samples::<f32>());
                                             ok = true;
                                         }
                                     }
-                                } else if let Ok(file) = std::fs::File::open(&url) {
-                                    if let Ok(source) =
-                                        rodio::Decoder::new(std::io::BufReader::new(file))
-                                    {
-                                        new_sink.append(source.convert_samples::<f32>());
-                                        ok = true;
-                                    }
-                                }
 
-                                if ok {
-                                    new_sink.play();
-                                    sink = Some(new_sink);
-                                    _handle = Some(h);
-                                    _stream = Some(s);
-                                    let _ = app_handle.emit(
-                                        "audio-state-changed",
-                                        serde_json::json!({"playing": true}),
-                                    );
+                                    if ok {
+                                        new_sink.play();
+                                        sink = Some(new_sink);
+                                        _handle = Some(h);
+                                        _stream = Some(s);
+                                        let _ = app_handle.emit(
+                                            "audio-state-changed",
+                                            serde_json::json!({"playing": true}),
+                                        );
+                                    } else {
+                                        drop(new_sink);
+                                        drop(h);
+                                        drop(s);
+                                        let _ = app_handle.emit(
+                                            "audio-state-changed",
+                                            serde_json::json!({"playing": false, "error": "failed to decode audio"}),
+                                        );
+                                    }
                                 } else {
-                                    drop(new_sink);
-                                    drop(h);
                                     drop(s);
                                     let _ = app_handle.emit(
                                         "audio-state-changed",
-                                        serde_json::json!({"playing": false, "error": "failed to decode audio"}),
+                                        serde_json::json!({"playing": false, "error": "failed to create audio sink"}),
                                     );
                                 }
                             } else {
-                                drop(s);
                                 let _ = app_handle.emit(
                                     "audio-state-changed",
-                                    serde_json::json!({"playing": false, "error": "failed to create audio sink"}),
+                                    serde_json::json!({"playing": false, "error": "no audio output device"}),
                                 );
                             }
-                        } else {
-                            let _ = app_handle.emit(
-                                "audio-state-changed",
-                                serde_json::json!({"playing": false, "error": "no audio output device"}),
-                            );
                         }
-                    }
-                    AudioMsg::Pause => {
-                        if let Some(s) = sink.as_ref() {
-                            s.pause();
+                        AudioMsg::Pause => {
+                            if let Some(s) = sink.as_ref() {
+                                s.pause();
+                                let _ = app_handle.emit(
+                                    "audio-state-changed",
+                                    serde_json::json!({"playing": false}),
+                                );
+                            }
+                        }
+                        AudioMsg::Resume => {
+                            if let Some(s) = sink.as_ref() {
+                                s.play();
+                                let _ = app_handle.emit(
+                                    "audio-state-changed",
+                                    serde_json::json!({"playing": true}),
+                                );
+                            }
+                        }
+                        AudioMsg::Stop => {
+                            if let Some(s) = sink.take() {
+                                s.stop();
+                            }
+                            _stream.take();
+                            _handle.take();
                             let _ = app_handle
                                 .emit("audio-state-changed", serde_json::json!({"playing": false}));
                         }
-                    }
-                    AudioMsg::Resume => {
-                        if let Some(s) = sink.as_ref() {
-                            s.play();
-                            let _ = app_handle
-                                .emit("audio-state-changed", serde_json::json!({"playing": true}));
+                        AudioMsg::SetVolume(vol) => {
+                            if let Some(s) = sink.as_ref() {
+                                s.set_volume(vol);
+                            }
+                        }
+                    },
+                    Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
+                        // Detect song ending naturally
+                        if let Some(ref s) = sink {
+                            if s.empty() {
+                                sink.take();
+                                _stream.take();
+                                _handle.take();
+                                let _ = app_handle.emit(
+                                    "audio-state-changed",
+                                    serde_json::json!({"playing": false}),
+                                );
+                            }
                         }
                     }
-                    AudioMsg::Stop => {
-                        if let Some(s) = sink.take() {
-                            s.stop();
-                        }
-                        _stream.take();
-                        _handle.take();
-                        let _ = app_handle
-                            .emit("audio-state-changed", serde_json::json!({"playing": false}));
-                    }
-                    AudioMsg::SetVolume(vol) => {
-                        if let Some(s) = sink.as_ref() {
-                            s.set_volume(vol);
-                        }
-                    }
+                    Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
                 }
             }
         });

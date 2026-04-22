@@ -10,10 +10,14 @@
   let showColors = $state(false);
   let saveTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  // Initialize from note prop
+  // Initialize from note id — only reset when switching notes, not on every store update
+  let lastNoteId = $state(0);
   $effect(() => {
-    title = note.title;
-    content = note.content;
+    if (note.id !== lastNoteId) {
+      lastNoteId = note.id;
+      title = note.title;
+      content = note.content;
+    }
   });
 
   function save() {

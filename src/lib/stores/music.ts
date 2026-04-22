@@ -29,7 +29,8 @@ export async function generateQr() {
 }
 
 export async function checkQr(key: string) {
-  return await invoke<number>("music_qr_check", { key });
+  const result = await invoke<Record<string, any>>("music_qr_check", { key });
+  return (result.code ?? result.data?.code ?? 800) as number;
 }
 
 export async function fetchLoginStatus() {
