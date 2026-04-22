@@ -46,3 +46,9 @@ export async function saveSetting(key: string, value: string) {
   await execute("INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now', 'localtime'))", [key, value]);
   settings.update((s) => ({ ...s, [key]: value }));
 }
+
+export function getSetting(key: keyof SettingsMap): string | undefined {
+  let val: string | undefined;
+  settings.subscribe((s) => (val = s[key]))();
+  return val;
+}

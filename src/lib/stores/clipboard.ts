@@ -3,6 +3,7 @@ import { select, execute } from "../utils/db";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import type { ClipboardItem } from "../types/clipboard";
+import { getSetting } from "./settings";
 
 export const clipboardHistory = writable<ClipboardItem[]>([]);
 export const searchQuery = writable("");
@@ -21,6 +22,9 @@ export async function initClipboardMonitor() {
   await loadHistory();
 
   await listen<string>("clipboard-changed", async (event) => {
+    const enabled = getSetting("clipboard_monitor_enabled");
+    if (enabled !== "true") return;
+
     const text = event.payload;
     if (!text.trim()) return;
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from "svelte";
   import { editingNoteId, updateNote, deleteNote, togglePin } from "../../../stores/notes";
   import { NOTE_COLORS } from "../../../types/note";
   import type { Note } from "../../../types/note";
@@ -9,6 +10,10 @@
   let content = $state("");
   let showColors = $state(false);
   let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  onDestroy(() => {
+    if (saveTimeout) clearTimeout(saveTimeout);
+  });
 
   // Initialize from note id — only reset when switching notes, not on every store update
   let lastNoteId = $state(0);

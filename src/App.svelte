@@ -9,7 +9,11 @@
   import { registerHotkeys } from "./lib/utils/hotkeys";
 
   let currentPanel = $state<string | null>(null);
-  activePanel.subscribe((v) => (currentPanel = v));
+  let unsubs: (() => void)[] = [];
+
+  onMount(() => {
+    unsubs.push(activePanel.subscribe((v) => (currentPanel = v)));
+  });
 
   let toastMsg = $state("");
   let toastTimer: ReturnType<typeof setTimeout> | null = null;

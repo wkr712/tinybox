@@ -6,6 +6,7 @@
   import { registerHotkeys } from "../../../utils/hotkeys";
   import { updateDurations } from "../../../stores/todo";
   import { setMaxHistory } from "../../../stores/clipboard";
+  import { setVolume } from "../../../stores/music";
 
   let s = $state<any>({});
   let editing: string | null = $state(null);
@@ -35,6 +36,8 @@
     updateDurations(workMin, breakMin);
     const max = parseInt(vals.clipboard_max_history) || 100;
     setMaxHistory(max);
+    const vol = parseInt(vals.music_volume) || 80;
+    setVolume(vol / 100);
   }
 
   async function toggleAlwaysOnTop() {

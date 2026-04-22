@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount, onDestroy } from "svelte";
   import { activePanel } from "../../stores/app";
   import NotesPanel from "./notes/NotesPanel.svelte";
   import TodoPanel from "./todo/TodoPanel.svelte";
@@ -8,7 +9,16 @@
   import SettingsPanel from "./settings/SettingsPanel.svelte";
 
   let current = $state<string | null>(null);
-  activePanel.subscribe((v) => (current = v));
+  let unsubs: (() => void)[] = [];
+
+  onMount(() => {
+    unsubs.push(activePanel.subscribe((v) => (current = v)));
+  });
+
+  onDestroy(() => {
+    unsubs.forEach((u) => u());
+    unsubs = [];
+  });
 
   const panelTitles: Record<string, string> = {
     notes: "便签",
