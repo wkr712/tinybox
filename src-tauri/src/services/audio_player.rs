@@ -1,6 +1,7 @@
 use rodio::Source;
 use std::sync::mpsc::{channel, Sender};
 use std::sync::Mutex;
+use std::time::Duration;
 
 enum AudioMsg {
     Play(String),
@@ -25,10 +26,14 @@ impl AudioState {
             let mut _handle: Option<rodio::OutputStreamHandle> = None;
             let mut sink: Option<rodio::Sink> = None;
 
+            let http_client = reqwest::blocking::Client::builder()
+                .timeout(Duration::from_secs(30))
+                .build()
+                .unwrap_or_else(|_| reqwest::blocking::Client::new());
+
             while let Ok(msg) = rx.recv() {
                 match msg {
                     AudioMsg::Play(url) => {
-                        // Stop previous
                         if let Some(s) = sink.take() {
                             s.stop();
                         }
@@ -39,7 +44,9 @@ impl AudioState {
                             if let Ok(new_sink) = rodio::Sink::try_new(&h) {
                                 let mut ok = false;
                                 if url.starts_with("http://") || url.starts_with("https://") {
-                                    if let Some(bytes) = reqwest::blocking::get(&url)
+                                    if let Some(bytes) = http_client
+                                        .get(&url)
+                                        .send()
                                         .ok()
                                         .and_then(|r| r.bytes().ok())
                                     {

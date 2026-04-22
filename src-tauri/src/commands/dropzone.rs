@@ -1,6 +1,6 @@
 use serde::Serialize;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tauri::Manager;
 
 #[derive(Serialize)]
@@ -11,13 +11,30 @@ pub struct DroppedFile {
     stored_path: String,
 }
 
+fn get_dropzone_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    let data_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    Ok(data_dir.join("dropzone"))
+}
+
+fn is_within_dropzone(path: &Path, dropzone_dir: &Path) -> Result<(), String> {
+    let canonical = path
+        .canonicalize()
+        .map_err(|e| format!("Invalid path: {}", e))?;
+    let canonical_dir = dropzone_dir
+        .canonicalize()
+        .map_err(|e| format!("Invalid dropzone dir: {}", e))?;
+    if !canonical.starts_with(&canonical_dir) {
+        return Err("Path is outside dropzone directory".into());
+    }
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn dropzone_store(
     app: tauri::AppHandle,
     file_paths: Vec<String>,
 ) -> Result<Vec<DroppedFile>, String> {
-    let data_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
-    let store_dir = data_dir.join("dropzone");
+    let store_dir = get_dropzone_dir(&app)?;
     fs::create_dir_all(&store_dir).map_err(|e| e.to_string())?;
 
     let mut results = Vec::new();
@@ -33,11 +50,10 @@ pub async fn dropzone_store(
             .map(|n| n.to_string_lossy().to_string())
             .unwrap_or_default();
 
-        // Create unique stored name to avoid collisions
         let ts = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
-            .as_millis();
+            .as_nanos();
         let ext = src.extension().map(|e| format!(".{}", e.to_string_lossy()));
         let stored_name = format!("{}_{:?}{}", file_name, ts, ext.unwrap_or_default());
         let stored_path = store_dir.join(&stored_name);
@@ -58,11 +74,17 @@ pub async fn dropzone_store(
 }
 
 #[tauri::command]
-pub async fn dropzone_copy_out(stored_path: String, target_dir: String) -> Result<String, String> {
+pub async fn dropzone_copy_out(
+    app: tauri::AppHandle,
+    stored_path: String,
+    target_dir: String,
+) -> Result<String, String> {
+    let dropzone_dir = get_dropzone_dir(&app)?;
     let src = PathBuf::from(&stored_path);
     if !src.exists() {
         return Err("Source file not found".into());
     }
+    is_within_dropzone(&src, &dropzone_dir)?;
 
     let target = PathBuf::from(&target_dir);
     fs::create_dir_all(&target).map_err(|e| e.to_string())?;
@@ -79,9 +101,11 @@ pub async fn dropzone_copy_out(stored_path: String, target_dir: String) -> Resul
 }
 
 #[tauri::command]
-pub async fn dropzone_delete(stored_path: String) -> Result<(), String> {
+pub async fn dropzone_delete(app: tauri::AppHandle, stored_path: String) -> Result<(), String> {
+    let dropzone_dir = get_dropzone_dir(&app)?;
     let path = PathBuf::from(&stored_path);
     if path.exists() {
+        is_within_dropzone(&path, &dropzone_dir)?;
         fs::remove_file(&path).map_err(|e| e.to_string())?;
     }
     Ok(())
