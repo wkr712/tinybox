@@ -5,6 +5,7 @@
   import ClipboardPanel from "./clipboard/ClipboardPanel.svelte";
   import DropZonePanel from "./dropzone/DropZonePanel.svelte";
   import MusicPanel from "./music/MusicPanel.svelte";
+  import SettingsPanel from "./settings/SettingsPanel.svelte";
 
   let current = $state<string | null>(null);
   activePanel.subscribe((v) => (current = v));
@@ -15,6 +16,7 @@
     clipboard: "剪贴板历史",
     dropzone: "文件暂存",
     music: "网易云音乐",
+    settings: "设置",
   };
 </script>
 
@@ -36,6 +38,8 @@
       <DropZonePanel />
     {:else if current === "music"}
       <MusicPanel />
+    {:else if current === "settings"}
+      <SettingsPanel />
     {/if}
   </div>
 </div>

@@ -95,7 +95,11 @@ INSERT OR IGNORE INTO settings (key, value) VALUES
     ('pomodoro_work_duration', '25'),
     ('pomodoro_break_duration', '5'),
     ('music_volume', '80'),
-    ('hotkey_toggle_sidebar', 'Alt+Space');
+    ('hotkey_toggle_sidebar', 'Alt+Space'),
+    ('hotkey_clipboard', 'Control+Shift+V'),
+    ('hotkey_new_note', 'Control+Shift+N'),
+    ('hotkey_play_pause', 'Control+Shift+M'),
+    ('hotkey_show_lyrics', 'Control+Shift+L');
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_notes_sort ON notes(sort_order);

@@ -1,0 +1,158 @@
+<script lang="ts">
+  import { onMount } from "svelte";
+  import { settings, saveSetting } from "../../../stores/settings";
+
+  let s: any = {};
+  settings.subscribe((v) => (s = v));
+
+  let editing: string | null = $state(null);
+  let editValue = $state("");
+
+  async function toggle(key: string) {
+    const current = s[key] === "true";
+    await saveSetting(key, current ? "false" : "true");
+  }
+
+  function startEdit(key: string) {
+    editing = key;
+    editValue = s[key] || "";
+  }
+
+  async function saveEdit(key: string) {
+    if (editValue.trim()) {
+      await saveSetting(key, editValue.trim());
+    }
+    editing = null;
+  }
+
+  function cancelEdit() {
+    editing = null;
+  }
+
+  function handleKeydown(e: KeyboardEvent) {
+    if (editing && e.key === "Enter") {
+      saveEdit(editing!);
+    } else if (editing && e.key === "Escape") {
+      cancelEdit();
+    }
+  }
+</script>
+
+<div class="h-full flex flex-col gap-4 overflow-y-auto">
+  <!-- Window -->
+  <section>
+    <div class="text-[10px] text-white/20 mb-2 px-1">窗口</div>
+    <div class="space-y-1">
+      <button
+        onclick={() => toggle("always_on_top")}
+        class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/[0.03] transition-colors"
+      >
+        <span class="text-xs text-white/60">窗口置顶</span>
+        <span class="text-[10px] {s.always_on_top === 'true' ? 'text-accent-cyan' : 'text-white/20'}">
+          {s.always_on_top === "true" ? "开" : "关"}
+        </span>
+      </button>
+      <button
+        onclick={() => saveSetting('sidebar_edge', s.sidebar_edge === 'left' ? 'right' : 'left')}
+        class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/[0.03] transition-colors"
+      >
+        <span class="text-xs text-white/60">侧边栏位置</span>
+        <span class="text-[10px] text-white/30">{s.sidebar_edge === "left" ? "左侧" : "右侧"}</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Clipboard -->
+  <section>
+    <div class="text-[10px] text-white/20 mb-2 px-1">剪贴板</div>
+    <div class="space-y-1">
+      <button
+        onclick={() => toggle("clipboard_monitor_enabled")}
+        class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/[0.03] transition-colors"
+      >
+        <span class="text-xs text-white/60">剪贴板监听</span>
+        <span class="text-[10px] {s.clipboard_monitor_enabled === 'true' ? 'text-accent-cyan' : 'text-white/20'}">
+          {s.clipboard_monitor_enabled === "true" ? "开" : "关"}
+        </span>
+      </button>
+      <div class="flex items-center justify-between px-3 py-2">
+        <span class="text-xs text-white/60">最大历史数</span>
+        <input
+          type="number"
+          value={s.clipboard_max_history}
+          onchange={(e) => saveSetting('clipboard_max_history', (e.target as HTMLInputElement).value)}
+          class="w-16 bg-white/[0.05] text-[11px] text-white/60 px-2 py-0.5 rounded text-right outline-none focus:ring-1 focus:ring-accent-cyan/30"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- Pomodoro -->
+  <section>
+    <div class="text-[10px] text-white/20 mb-2 px-1">番茄钟</div>
+    <div class="space-y-1">
+      <div class="flex items-center justify-between px-3 py-2">
+        <span class="text-xs text-white/60">工作时长（分钟）</span>
+        <input
+          type="number"
+          value={s.pomodoro_work_duration}
+          onchange={(e) => saveSetting('pomodoro_work_duration', (e.target as HTMLInputElement).value)}
+          class="w-16 bg-white/[0.05] text-[11px] text-white/60 px-2 py-0.5 rounded text-right outline-none focus:ring-1 focus:ring-accent-cyan/30"
+        />
+      </div>
+      <div class="flex items-center justify-between px-3 py-2">
+        <span class="text-xs text-white/60">休息时长（分钟）</span>
+        <input
+          type="number"
+          value={s.pomodoro_break_duration}
+          onchange={(e) => saveSetting('pomodoro_break_duration', (e.target as HTMLInputElement).value)}
+          class="w-16 bg-white/[0.05] text-[11px] text-white/60 px-2 py-0.5 rounded text-right outline-none focus:ring-1 focus:ring-accent-cyan/30"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- Hotkeys -->
+  <section>
+    <div class="text-[10px] text-white/20 mb-2 px-1">快捷键</div>
+    <div class="space-y-1">
+      {#each [
+        { key: "hotkey_toggle_sidebar", label: "显示/隐藏" },
+        { key: "hotkey_clipboard", label: "剪贴板历史" },
+        { key: "hotkey_new_note", label: "新建便签" },
+        { key: "hotkey_play_pause", label: "播放/暂停" },
+        { key: "hotkey_show_lyrics", label: "显示歌词" },
+      ] as item (item.key)}
+        <div class="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/[0.02]">
+          <span class="text-xs text-white/60">{item.label}</span>
+          {#if editing === item.key}
+            <input
+              type="text"
+              bind:value={editValue}
+              onkeydown={handleKeydown}
+              class="w-32 bg-accent-cyan/10 text-[10px] text-accent-cyan px-2 py-0.5 rounded outline-none"
+              placeholder="按键..."
+            />
+            <button onclick={() => saveEdit(item.key)} class="ml-1 text-[10px] text-accent-cyan hover:underline">确定</button>
+            <button onclick={cancelEdit} class="ml-1 text-[10px] text-white/20 hover:text-white/40">取消</button>
+          {:else}
+            <div class="flex items-center gap-1">
+              <span class="text-[10px] text-white/25 bg-white/[0.05] px-1.5 py-0.5 rounded">{s[item.key]}</span>
+              <button onclick={() => startEdit(item.key)} class="text-white/20 hover:text-white/50">
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+            </div>
+          {/if}
+        </div>
+      {/each}
+    </div>
+  </section>
+
+  <!-- About -->
+  <section class="pt-2 border-t border-white/5">
+    <div class="text-center py-2">
+      <div class="text-[10px] text-white/15">TinyBox v0.8.0</div>
+      <div class="text-[9px] text-white/10 mt-0.5">Tauri 2 + Svelte 5 + SQLite</div>
+    </div>
+  </section>
+</div>
