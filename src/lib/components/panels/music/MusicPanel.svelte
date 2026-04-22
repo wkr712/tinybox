@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import {
     user, currentView, fetchLoginStatus, fetchUserPlaylists, currentSong, isPlaying,
     pauseMusic, resumeMusic,
@@ -11,24 +11,28 @@
   import SearchView from "./SearchView.svelte";
   import DiscoverView from "./DiscoverView.svelte";
 
-  let u: any = null;
-  user.subscribe((v) => (u = v));
-
-  let view: any = "login";
-  currentView.subscribe((v) => (view = v));
-
-  let song: any = null;
-  currentSong.subscribe((v) => (song = v));
-
+  let u = $state<any>(null);
+  let view = $state<any>("login");
+  let song = $state<any>(null);
   let playing = $state(false);
-  isPlaying.subscribe((v) => (playing = v));
+  let unsubs: (() => void)[] = [];
 
   onMount(async () => {
+    unsubs.push(user.subscribe((v) => (u = v)));
+    unsubs.push(currentView.subscribe((v) => (view = v)));
+    unsubs.push(currentSong.subscribe((v) => (song = v)));
+    unsubs.push(isPlaying.subscribe((v) => (playing = v)));
+
     const ok = await fetchLoginStatus();
     if (ok && u) {
       currentView.set("discover");
       await fetchUserPlaylists(u.user_id);
     }
+  });
+
+  onDestroy(() => {
+    unsubs.forEach((u) => u());
+    unsubs = [];
   });
 </script>
 

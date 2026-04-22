@@ -20,15 +20,7 @@
   let phase = $state<"work" | "break" | "long_break">("work");
   let count = $state(0);
   let sessions = $state(0);
-
-  todos.subscribe((v) => (allTodos = v));
-  todoFilter.subscribe((v) => (filter = v));
-  timerSeconds.subscribe((v) => (seconds = v));
-  timerTotal.subscribe((v) => (total = v));
-  timerState.subscribe((v) => (state = v));
-  timerPhase.subscribe((v) => (phase = v));
-  pomodoroCount.subscribe((v) => (count = v));
-  todaySessions.subscribe((v) => (sessions = v));
+  let unsubs: (() => void)[] = [];
 
   let filtered = $derived(getFilteredTodos(allTodos, filter));
   let progress = $derived(total > 0 ? ((total - seconds) / total) * 100 : 0);
@@ -36,11 +28,22 @@
   let timerInterval: ReturnType<typeof setInterval> | null = null;
 
   onMount(() => {
+    unsubs.push(todos.subscribe((v) => (allTodos = v)));
+    unsubs.push(todoFilter.subscribe((v) => (filter = v)));
+    unsubs.push(timerSeconds.subscribe((v) => (seconds = v)));
+    unsubs.push(timerTotal.subscribe((v) => (total = v)));
+    unsubs.push(timerState.subscribe((v) => (state = v)));
+    unsubs.push(timerPhase.subscribe((v) => (phase = v)));
+    unsubs.push(pomodoroCount.subscribe((v) => (count = v)));
+    unsubs.push(todaySessions.subscribe((v) => (sessions = v)));
+
     loadTodos();
     loadTodaySessions();
   });
 
   onDestroy(() => {
+    unsubs.forEach((u) => u());
+    unsubs = [];
     if (timerInterval) clearInterval(timerInterval);
   });
 

@@ -1,28 +1,18 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import {
     currentSong, isPlaying, lyrics, playProgress, pauseMusic, resumeMusic,
     stopMusic, setVolume, volume, currentView, formatDuration,
     tracks, playSong,
   } from "../../../stores/music";
 
-  let song: any = null;
-  currentSong.subscribe((v) => (song = v));
-
+  let song = $state<any>(null);
   let playing = $state(false);
-  isPlaying.subscribe((v) => (playing = v));
-
-  let lrc: any[] = [];
-  lyrics.subscribe((v) => (lrc = v));
-
+  let lrc = $state<any[]>([]);
   let progress = $state(0);
-  playProgress.subscribe((v) => (progress = v));
-
   let vol = $state(0.8);
-  volume.subscribe((v) => (vol = v));
-
-  let trackList: any[] = [];
-  tracks.subscribe((v) => (trackList = v));
+  let trackList = $state<any[]>([]);
+  let unsubs: (() => void)[] = [];
 
   let lyricsContainer: HTMLDivElement | undefined = $state();
 
@@ -52,6 +42,20 @@
   let progressPercent = $derived(
     song && song.duration > 0 ? Math.min((progress * 1000) / song.duration * 100, 100) : 0
   );
+
+  onMount(() => {
+    unsubs.push(currentSong.subscribe((v) => (song = v)));
+    unsubs.push(isPlaying.subscribe((v) => (playing = v)));
+    unsubs.push(lyrics.subscribe((v) => (lrc = v)));
+    unsubs.push(playProgress.subscribe((v) => (progress = v)));
+    unsubs.push(volume.subscribe((v) => (vol = v)));
+    unsubs.push(tracks.subscribe((v) => (trackList = v)));
+  });
+
+  onDestroy(() => {
+    unsubs.forEach((u) => u());
+    unsubs = [];
+  });
 
   async function togglePlay() {
     if (playing) {

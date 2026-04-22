@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { settings, saveSetting } from "../../../stores/settings";
   import { getCurrentWindow } from "@tauri-apps/api/window";
   import { getVersion } from "@tauri-apps/api/app";
@@ -7,20 +7,26 @@
   import { updateDurations } from "../../../stores/todo";
   import { setMaxHistory } from "../../../stores/clipboard";
 
-  let s: any = {};
-  settings.subscribe((v) => (s = v));
-
+  let s = $state<any>({});
   let editing: string | null = $state(null);
   let editValue = $state("");
   let version = $state("1.0.0");
+  let unsubs: (() => void)[] = [];
 
   onMount(async () => {
+    unsubs.push(settings.subscribe((v) => (s = v)));
+
     try {
       version = await getVersion();
     } catch {
       // fallback
     }
     applySettings(s);
+  });
+
+  onDestroy(() => {
+    unsubs.forEach((u) => u());
+    unsubs = [];
   });
 
   function applySettings(vals: any) {

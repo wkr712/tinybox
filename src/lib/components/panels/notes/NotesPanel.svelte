@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { notes, searchQuery, createNote, loadNotes } from "../../../stores/notes";
   import NoteCard from "./NoteCard.svelte";
   import NoteEditor from "./NoteEditor.svelte";
@@ -10,17 +10,23 @@
   let allNotes = $state<Note[]>([]);
   let query = $state("");
   let currentEditId = $state<number | null>(null);
-
-  notes.subscribe((v) => (allNotes = v));
-  editingNoteId.subscribe((v) => (currentEditId = v));
-  searchQuery.subscribe((v) => (query = v));
+  let unsubs: (() => void)[] = [];
 
   let filtered = $derived(getFilteredNotes(allNotes, query));
   let pinned = $derived(filtered.filter((n) => n.pinned));
   let unpinned = $derived(filtered.filter((n) => !n.pinned));
 
   onMount(() => {
+    unsubs.push(notes.subscribe((v) => (allNotes = v)));
+    unsubs.push(editingNoteId.subscribe((v) => (currentEditId = v)));
+    unsubs.push(searchQuery.subscribe((v) => (query = v)));
+
     loadNotes();
+  });
+
+  onDestroy(() => {
+    unsubs.forEach((u) => u());
+    unsubs = [];
   });
 </script>
 

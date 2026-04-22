@@ -1,14 +1,23 @@
 <script lang="ts">
+  import { onMount, onDestroy } from "svelte";
   import {
     playlists, fetchUserPlaylists, fetchPlaylistTracks,
     currentView, currentPlaylist, user,
   } from "../../../stores/music";
 
   let list = $state<any[]>([]);
-  playlists.subscribe((v) => (list = v));
+  let u = $state<any>(null);
+  let unsubs: (() => void)[] = [];
 
-  let u: any = null;
-  user.subscribe((v) => (u = v));
+  onMount(() => {
+    unsubs.push(playlists.subscribe((v) => (list = v)));
+    unsubs.push(user.subscribe((v) => (u = v)));
+  });
+
+  onDestroy(() => {
+    unsubs.forEach((u) => u());
+    unsubs = [];
+  });
 
   function openPlaylist(pl: any) {
     currentPlaylist.set(pl);

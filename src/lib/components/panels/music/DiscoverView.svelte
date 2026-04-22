@@ -1,26 +1,31 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import {
     user, recommendPlaylists, recommendSongs, hotSearches,
     fetchRecommendPlaylists, fetchRecommendSongs, fetchHotSearches,
     fetchPlaylistTracks, playSong, currentView, searchSongs, formatDuration,
   } from "../../../stores/music";
 
-  let rpl: any[] = [];
-  recommendPlaylists.subscribe((v) => (rpl = v));
-
-  let rsongs: any[] = [];
-  recommendSongs.subscribe((v) => (rsongs = v));
-
-  let hot: any[] = [];
-  hotSearches.subscribe((v) => (hot = v));
+  let rpl = $state<any[]>([]);
+  let rsongs = $state<any[]>([]);
+  let hot = $state<any[]>([]);
+  let unsubs: (() => void)[] = [];
 
   onMount(async () => {
+    unsubs.push(recommendPlaylists.subscribe((v) => (rpl = v)));
+    unsubs.push(recommendSongs.subscribe((v) => (rsongs = v)));
+    unsubs.push(hotSearches.subscribe((v) => (hot = v)));
+
     await Promise.all([
       fetchRecommendPlaylists(),
       fetchRecommendSongs(),
       fetchHotSearches(),
     ]);
+  });
+
+  onDestroy(() => {
+    unsubs.forEach((u) => u());
+    unsubs = [];
   });
 
   function openPlaylist(pl: any) {

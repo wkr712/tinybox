@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount, onDestroy } from "svelte";
   import { activePanel, expandWindow, collapseWindow } from "../../stores/app";
   import { currentSong, isPlaying, pauseMusic, resumeMusic } from "../../stores/music";
 
@@ -11,13 +12,20 @@
   ];
 
   let current = $state<string | null>(null);
-  activePanel.subscribe((v) => (current = v));
-
-  let song: any = null;
-  currentSong.subscribe((v) => (song = v));
-
+  let song = $state<any>(null);
   let playing = $state(false);
-  isPlaying.subscribe((v) => (playing = v));
+  let unsubs: (() => void)[] = [];
+
+  onMount(() => {
+    unsubs.push(activePanel.subscribe((v) => (current = v)));
+    unsubs.push(currentSong.subscribe((v) => (song = v)));
+    unsubs.push(isPlaying.subscribe((v) => (playing = v)));
+  });
+
+  onDestroy(() => {
+    unsubs.forEach((u) => u());
+    unsubs = [];
+  });
 
   async function selectPanel(id: string) {
     if (current === id) {

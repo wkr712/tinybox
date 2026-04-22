@@ -1,20 +1,25 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import {
     searchResults, searchSongs, playSong, formatDuration,
     currentView, hotSearches, fetchHotSearches,
   } from "../../../stores/music";
 
   let query = $state("");
-
-  let results: any[] = [];
-  searchResults.subscribe((v) => (results = v));
-
-  let hot: any[] = [];
-  hotSearches.subscribe((v) => (hot = v));
+  let results = $state<any[]>([]);
+  let hot = $state<any[]>([]);
+  let unsubs: (() => void)[] = [];
 
   onMount(() => {
+    unsubs.push(searchResults.subscribe((v) => (results = v)));
+    unsubs.push(hotSearches.subscribe((v) => (hot = v)));
+
     if (hot.length === 0) fetchHotSearches();
+  });
+
+  onDestroy(() => {
+    unsubs.forEach((u) => u());
+    unsubs = [];
   });
 
   function handleSearch() {

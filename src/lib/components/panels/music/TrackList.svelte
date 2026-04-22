@@ -1,20 +1,27 @@
 <script lang="ts">
+  import { onMount, onDestroy } from "svelte";
   import {
     tracks, currentSong, playSong, isPlaying,
     formatDuration, currentView, currentPlaylist, lyrics,
   } from "../../../stores/music";
 
   let list = $state<any[]>([]);
-  tracks.subscribe((v) => (list = v));
-
-  let song: any = null;
-  currentSong.subscribe((v) => (song = v));
-
+  let song = $state<any>(null);
   let playing = $state(false);
-  isPlaying.subscribe((v) => (playing = v));
+  let pl = $state<any>(null);
+  let unsubs: (() => void)[] = [];
 
-  let pl: any = null;
-  currentPlaylist.subscribe((v) => (pl = v));
+  onMount(() => {
+    unsubs.push(tracks.subscribe((v) => (list = v)));
+    unsubs.push(currentSong.subscribe((v) => (song = v)));
+    unsubs.push(isPlaying.subscribe((v) => (playing = v)));
+    unsubs.push(currentPlaylist.subscribe((v) => (pl = v)));
+  });
+
+  onDestroy(() => {
+    unsubs.forEach((u) => u());
+    unsubs = [];
+  });
 
   async function handlePlay(track: any) {
     await playSong(track);

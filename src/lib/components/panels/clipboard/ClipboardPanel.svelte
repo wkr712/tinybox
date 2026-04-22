@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import {
     clipboardHistory, searchQuery, initClipboardMonitor,
     clearHistory, getFilteredItems, getPreview, timeAgo,
@@ -9,16 +9,22 @@
 
   let items = $state<CI[]>([]);
   let query = $state("");
-
-  clipboardHistory.subscribe((v) => (items = v));
-  searchQuery.subscribe((v) => (query = v));
+  let unsubs: (() => void)[] = [];
 
   let filtered = $derived(getFilteredItems(items, query));
   let favorites = $derived(filtered.filter((i) => i.is_favorite));
   let recent = $derived(filtered.filter((i) => !i.is_favorite));
 
   onMount(() => {
+    unsubs.push(clipboardHistory.subscribe((v) => (items = v)));
+    unsubs.push(searchQuery.subscribe((v) => (query = v)));
+
     initClipboardMonitor();
+  });
+
+  onDestroy(() => {
+    unsubs.forEach((u) => u());
+    unsubs = [];
   });
 
   function handleClear() {

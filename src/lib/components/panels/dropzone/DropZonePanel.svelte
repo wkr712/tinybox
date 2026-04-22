@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import {
     dropzoneFiles, isDragOver, loadFiles, storeFiles,
   } from "../../../stores/dropzone";
@@ -8,12 +8,18 @@
 
   let files = $state<DropZoneFile[]>([]);
   let dragOver = $state(false);
-
-  dropzoneFiles.subscribe((v) => (files = v));
-  isDragOver.subscribe((v) => (dragOver = v));
+  let unsubs: (() => void)[] = [];
 
   onMount(() => {
+    unsubs.push(dropzoneFiles.subscribe((v) => (files = v)));
+    unsubs.push(isDragOver.subscribe((v) => (dragOver = v)));
+
     loadFiles();
+  });
+
+  onDestroy(() => {
+    unsubs.forEach((u) => u());
+    unsubs = [];
   });
 
   async function handleDrop(e: DragEvent) {
