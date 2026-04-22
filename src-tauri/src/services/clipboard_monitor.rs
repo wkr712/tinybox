@@ -31,8 +31,8 @@ impl ClipboardMonitor {
 
                         // Auto-cleanup hint every 50 items
                         if count % 50 == 0 {
-                            let _ =
-                                app_handle.emit("clipboard-cleanup", serde_json::json!(max_history));
+                            let _ = app_handle
+                                .emit("clipboard-cleanup", serde_json::json!(max_history));
                         }
                     }
                 }

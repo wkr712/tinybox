@@ -12,11 +12,11 @@ pub struct DroppedFile {
 }
 
 #[tauri::command]
-pub async fn dropzone_store(app: tauri::AppHandle, file_paths: Vec<String>) -> Result<Vec<DroppedFile>, String> {
-    let data_dir = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| e.to_string())?;
+pub async fn dropzone_store(
+    app: tauri::AppHandle,
+    file_paths: Vec<String>,
+) -> Result<Vec<DroppedFile>, String> {
+    let data_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
     let store_dir = data_dir.join("dropzone");
     fs::create_dir_all(&store_dir).map_err(|e| e.to_string())?;
 

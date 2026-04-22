@@ -27,7 +27,10 @@ pub async fn music_qr_generate(state: State<'_, NcmState>) -> Result<QrResult, S
 }
 
 #[tauri::command]
-pub async fn music_qr_check(state: State<'_, NcmState>, key: String) -> Result<serde_json::Value, String> {
+pub async fn music_qr_check(
+    state: State<'_, NcmState>,
+    key: String,
+) -> Result<serde_json::Value, String> {
     NcmService::qr_check(&state, &key).await
 }
 
@@ -37,22 +40,34 @@ pub async fn music_login_status(state: State<'_, NcmState>) -> Result<serde_json
 }
 
 #[tauri::command]
-pub async fn music_user_playlist(state: State<'_, NcmState>, uid: i64) -> Result<serde_json::Value, String> {
+pub async fn music_user_playlist(
+    state: State<'_, NcmState>,
+    uid: i64,
+) -> Result<serde_json::Value, String> {
     NcmService::user_playlist(&state, uid).await
 }
 
 #[tauri::command]
-pub async fn music_playlist_detail(state: State<'_, NcmState>, id: i64) -> Result<serde_json::Value, String> {
+pub async fn music_playlist_detail(
+    state: State<'_, NcmState>,
+    id: i64,
+) -> Result<serde_json::Value, String> {
     NcmService::playlist_detail(&state, id).await
 }
 
 #[tauri::command]
-pub async fn music_song_url(state: State<'_, NcmState>, id: i64) -> Result<serde_json::Value, String> {
+pub async fn music_song_url(
+    state: State<'_, NcmState>,
+    id: i64,
+) -> Result<serde_json::Value, String> {
     NcmService::song_url(&state, id).await
 }
 
 #[tauri::command]
-pub async fn music_song_detail(state: State<'_, NcmState>, ids: String) -> Result<serde_json::Value, String> {
+pub async fn music_song_detail(
+    state: State<'_, NcmState>,
+    ids: String,
+) -> Result<serde_json::Value, String> {
     NcmService::song_detail(&state, &ids).await
 }
 
@@ -62,7 +77,10 @@ pub async fn music_lyric(state: State<'_, NcmState>, id: i64) -> Result<serde_js
 }
 
 #[tauri::command]
-pub async fn music_search(state: State<'_, NcmState>, keywords: String) -> Result<serde_json::Value, String> {
+pub async fn music_search(
+    state: State<'_, NcmState>,
+    keywords: String,
+) -> Result<serde_json::Value, String> {
     NcmService::search(&state, &keywords).await
 }
 
@@ -92,17 +110,25 @@ pub fn music_set_volume(state: State<'_, AudioState>, volume: f32) -> Result<(),
 }
 
 #[tauri::command]
-pub async fn music_personalized(state: State<'_, NcmState>, limit: i64) -> Result<serde_json::Value, String> {
+pub async fn music_personalized(
+    state: State<'_, NcmState>,
+    limit: i64,
+) -> Result<serde_json::Value, String> {
     NcmService::personalized(&state, limit).await
 }
 
 #[tauri::command]
-pub async fn music_personalized_newsong(state: State<'_, NcmState>, limit: i64) -> Result<serde_json::Value, String> {
+pub async fn music_personalized_newsong(
+    state: State<'_, NcmState>,
+    limit: i64,
+) -> Result<serde_json::Value, String> {
     NcmService::personalized_newsong(&state, limit).await
 }
 
 #[tauri::command]
-pub async fn music_recommend_songs(state: State<'_, NcmState>) -> Result<serde_json::Value, String> {
+pub async fn music_recommend_songs(
+    state: State<'_, NcmState>,
+) -> Result<serde_json::Value, String> {
     NcmService::recommend_songs(&state).await
 }
 

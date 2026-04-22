@@ -13,7 +13,10 @@ pub fn create_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let separator2 = PredefinedMenuItem::separator(app)?;
     let quit = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
 
-    let menu = Menu::with_items(app, &[&show, &hide, &separator1, &check_update, &separator2, &quit])?;
+    let menu = Menu::with_items(
+        app,
+        &[&show, &hide, &separator1, &check_update, &separator2, &quit],
+    )?;
 
     TrayIconBuilder::new()
         .icon(app.default_window_icon().unwrap().clone())
@@ -57,7 +60,9 @@ pub fn create_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn try_check_update(app: &tauri::AppHandle) -> Result<Option<String>, Box<dyn std::error::Error + Send + Sync>> {
+async fn try_check_update(
+    app: &tauri::AppHandle,
+) -> Result<Option<String>, Box<dyn std::error::Error + Send + Sync>> {
     let updater = app.updater_builder().build()?;
     match updater.check().await {
         Ok(Some(update)) => Ok(Some(update.version)),

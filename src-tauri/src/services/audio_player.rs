@@ -39,14 +39,21 @@ impl AudioState {
                             if let Ok(new_sink) = rodio::Sink::try_new(&h) {
                                 let mut ok = false;
                                 if url.starts_with("http://") || url.starts_with("https://") {
-                                    if let Some(bytes) = reqwest::blocking::get(&url).ok().and_then(|r| r.bytes().ok()) {
-                                        if let Ok(source) = rodio::Decoder::new(std::io::Cursor::new(bytes)) {
+                                    if let Some(bytes) = reqwest::blocking::get(&url)
+                                        .ok()
+                                        .and_then(|r| r.bytes().ok())
+                                    {
+                                        if let Ok(source) =
+                                            rodio::Decoder::new(std::io::Cursor::new(bytes))
+                                        {
                                             new_sink.append(source.convert_samples::<f32>());
                                             ok = true;
                                         }
                                     }
                                 } else if let Ok(file) = std::fs::File::open(&url) {
-                                    if let Ok(source) = rodio::Decoder::new(std::io::BufReader::new(file)) {
+                                    if let Ok(source) =
+                                        rodio::Decoder::new(std::io::BufReader::new(file))
+                                    {
                                         new_sink.append(source.convert_samples::<f32>());
                                         ok = true;
                                     }
@@ -107,7 +114,8 @@ impl AudioPlayer {
     pub fn play(state: &AudioState, url: &str) -> Result<(), String> {
         let tx = state.tx.lock().map_err(|e| e.to_string())?;
         if let Some(tx) = tx.as_ref() {
-            tx.send(AudioMsg::Play(url.to_string())).map_err(|e| e.to_string())?;
+            tx.send(AudioMsg::Play(url.to_string()))
+                .map_err(|e| e.to_string())?;
         }
         *state.current_url.lock().map_err(|e| e.to_string())? = url.to_string();
         *state.is_playing.lock().map_err(|e| e.to_string())? = true;
@@ -145,7 +153,8 @@ impl AudioPlayer {
     pub fn set_volume(state: &AudioState, vol: f32) -> Result<(), String> {
         let tx = state.tx.lock().map_err(|e| e.to_string())?;
         if let Some(tx) = tx.as_ref() {
-            tx.send(AudioMsg::SetVolume(vol)).map_err(|e| e.to_string())?;
+            tx.send(AudioMsg::SetVolume(vol))
+                .map_err(|e| e.to_string())?;
         }
         Ok(())
     }

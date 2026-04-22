@@ -40,21 +40,30 @@ impl NcmService {
     pub async fn qr_key(state: &NcmState) -> Result<Value, String> {
         let client = state.get_client()?;
         let query = Query::new();
-        let resp = client.login_qr_key(&query).await.map_err(|e| e.to_string())?;
+        let resp = client
+            .login_qr_key(&query)
+            .await
+            .map_err(|e| e.to_string())?;
         Ok(resp.body)
     }
 
     pub async fn qr_create(state: &NcmState, key: &str) -> Result<Value, String> {
         let client = state.get_client()?;
         let query = Query::new().param("key", key);
-        let resp = client.login_qr_create(&query).await.map_err(|e| e.to_string())?;
+        let resp = client
+            .login_qr_create(&query)
+            .await
+            .map_err(|e| e.to_string())?;
         Ok(resp.body)
     }
 
     pub async fn qr_check(state: &NcmState, key: &str) -> Result<Value, String> {
         let client = state.get_client()?;
         let query = Query::new().param("key", key);
-        let resp = client.login_qr_check(&query).await.map_err(|e| e.to_string())?;
+        let resp = client
+            .login_qr_check(&query)
+            .await
+            .map_err(|e| e.to_string())?;
 
         if resp.body["code"].as_i64() == Some(803) {
             let cookie_str = resp.cookie.join("; ");
@@ -70,7 +79,10 @@ impl NcmService {
         let cookie = state.get_cookie()?;
         let client = state.get_client()?;
         let query = Query::new().cookie(&cookie);
-        let resp = client.login_status(&query).await.map_err(|e| e.to_string())?;
+        let resp = client
+            .login_status(&query)
+            .await
+            .map_err(|e| e.to_string())?;
         Ok(resp.body)
     }
 
@@ -78,7 +90,10 @@ impl NcmService {
         let cookie = state.get_cookie()?;
         let client = state.get_client()?;
         let query = Query::new().param("uid", &uid.to_string()).cookie(&cookie);
-        let resp = client.user_playlist(&query).await.map_err(|e| e.to_string())?;
+        let resp = client
+            .user_playlist(&query)
+            .await
+            .map_err(|e| e.to_string())?;
         Ok(resp.body)
     }
 
@@ -86,7 +101,10 @@ impl NcmService {
         let cookie = state.get_cookie()?;
         let client = state.get_client()?;
         let query = Query::new().param("id", &id.to_string()).cookie(&cookie);
-        let resp = client.playlist_detail(&query).await.map_err(|e| e.to_string())?;
+        let resp = client
+            .playlist_detail(&query)
+            .await
+            .map_err(|e| e.to_string())?;
         Ok(resp.body)
     }
 
@@ -97,7 +115,10 @@ impl NcmService {
             .param("id", &id.to_string())
             .param("level", "standard")
             .cookie(&cookie);
-        let resp = client.song_url_v1(&query).await.map_err(|e| e.to_string())?;
+        let resp = client
+            .song_url_v1(&query)
+            .await
+            .map_err(|e| e.to_string())?;
         Ok(resp.body)
     }
 
@@ -105,7 +126,10 @@ impl NcmService {
         let cookie = state.get_cookie()?;
         let client = state.get_client()?;
         let query = Query::new().param("ids", ids).cookie(&cookie);
-        let resp = client.song_detail(&query).await.map_err(|e| e.to_string())?;
+        let resp = client
+            .song_detail(&query)
+            .await
+            .map_err(|e| e.to_string())?;
         Ok(resp.body)
     }
 
@@ -125,23 +149,36 @@ impl NcmService {
             .param("type", "1")
             .param("limit", "30")
             .cookie(&cookie);
-        let resp = client.cloudsearch(&query).await.map_err(|e| e.to_string())?;
+        let resp = client
+            .cloudsearch(&query)
+            .await
+            .map_err(|e| e.to_string())?;
         Ok(resp.body)
     }
 
     pub async fn personalized(state: &NcmState, limit: i64) -> Result<Value, String> {
         let cookie = state.get_cookie()?;
         let client = state.get_client()?;
-        let query = Query::new().param("limit", &limit.to_string()).cookie(&cookie);
-        let resp = client.personalized(&query).await.map_err(|e| e.to_string())?;
+        let query = Query::new()
+            .param("limit", &limit.to_string())
+            .cookie(&cookie);
+        let resp = client
+            .personalized(&query)
+            .await
+            .map_err(|e| e.to_string())?;
         Ok(resp.body)
     }
 
     pub async fn personalized_newsong(state: &NcmState, limit: i64) -> Result<Value, String> {
         let cookie = state.get_cookie()?;
         let client = state.get_client()?;
-        let query = Query::new().param("limit", &limit.to_string()).cookie(&cookie);
-        let resp = client.personalized_newsong(&query).await.map_err(|e| e.to_string())?;
+        let query = Query::new()
+            .param("limit", &limit.to_string())
+            .cookie(&cookie);
+        let resp = client
+            .personalized_newsong(&query)
+            .await
+            .map_err(|e| e.to_string())?;
         Ok(resp.body)
     }
 
@@ -149,7 +186,10 @@ impl NcmService {
         let cookie = state.get_cookie()?;
         let client = state.get_client()?;
         let query = Query::new().cookie(&cookie);
-        let resp = client.recommend_songs(&query).await.map_err(|e| e.to_string())?;
+        let resp = client
+            .recommend_songs(&query)
+            .await
+            .map_err(|e| e.to_string())?;
         Ok(resp.body)
     }
 
@@ -157,7 +197,10 @@ impl NcmService {
         let cookie = state.get_cookie()?;
         let client = state.get_client()?;
         let query = Query::new().cookie(&cookie);
-        let resp = client.search_hot_detail(&query).await.map_err(|e| e.to_string())?;
+        let resp = client
+            .search_hot_detail(&query)
+            .await
+            .map_err(|e| e.to_string())?;
         Ok(resp.body)
     }
 }
