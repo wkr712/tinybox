@@ -17,13 +17,13 @@ export async function createNote() {
   await execute(
     "INSERT INTO notes (title, content, color) VALUES ('', '', '#1a1a2e')"
   );
-  await loadNotes();
   const rows = await select<{ id: number }>(
-    "SELECT id FROM notes ORDER BY id DESC LIMIT 1"
+    "SELECT last_insert_rowid() as id"
   );
   if (rows.length > 0) {
     editingNoteId.set(rows[0].id);
   }
+  await loadNotes();
 }
 
 export async function updateNote(id: number, fields: Partial<Pick<Note, "title" | "content" | "color" | "pinned">>) {

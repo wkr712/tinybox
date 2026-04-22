@@ -70,7 +70,7 @@
 
   async function saveNumberSetting(key: string, value: string) {
     await saveSetting(key, value);
-    applySettings(s);
+    applySettings({ ...s, [key]: value });
   }
 </script>
 

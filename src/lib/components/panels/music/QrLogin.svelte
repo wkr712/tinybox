@@ -7,10 +7,14 @@
   let qrKey = $state("");
   let status = $state<"loading" | "waiting" | "scanned" | "expired" | "error">("loading");
   let pollTimer: ReturnType<typeof setInterval> | null = null;
+  let expiryTimer: ReturnType<typeof setTimeout> | null = null;
 
   onMount(async () => {
     await startQr();
-    return () => { if (pollTimer) clearInterval(pollTimer); };
+    return () => {
+      if (pollTimer) clearInterval(pollTimer);
+      if (expiryTimer) clearTimeout(expiryTimer);
+    };
   });
 
   async function startQr() {
@@ -28,8 +32,9 @@
 
   function startPolling() {
     if (pollTimer) clearInterval(pollTimer);
+    if (expiryTimer) clearTimeout(expiryTimer);
     let expired = false;
-    const timeout = setTimeout(() => {
+    expiryTimer = setTimeout(() => {
       expired = true;
       status = "expired";
       if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
@@ -42,12 +47,12 @@
         if (code === 800) {
           status = "expired";
           clearInterval(pollTimer!);
-          clearTimeout(timeout);
+          clearTimeout(expiryTimer!);
         } else if (code === 802) {
           status = "scanned";
         } else if (code === 803) {
           clearInterval(pollTimer!);
-          clearTimeout(timeout);
+          clearTimeout(expiryTimer!);
           const ok = await fetchLoginStatus();
           if (ok) {
             const u = get(user);

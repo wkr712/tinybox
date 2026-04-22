@@ -100,16 +100,16 @@ impl AudioState {
                     AudioMsg::Pause => {
                         if let Some(s) = sink.as_ref() {
                             s.pause();
+                            let _ = app_handle
+                                .emit("audio-state-changed", serde_json::json!({"playing": false}));
                         }
-                        let _ = app_handle
-                            .emit("audio-state-changed", serde_json::json!({"playing": false}));
                     }
                     AudioMsg::Resume => {
                         if let Some(s) = sink.as_ref() {
                             s.play();
+                            let _ = app_handle
+                                .emit("audio-state-changed", serde_json::json!({"playing": true}));
                         }
-                        let _ = app_handle
-                            .emit("audio-state-changed", serde_json::json!({"playing": true}));
                     }
                     AudioMsg::Stop => {
                         if let Some(s) = sink.take() {

@@ -59,6 +59,7 @@ const DURATIONS: Record<PomodoroPhase, number> = {
 export function updateDurations(workMin: number, breakMin: number) {
   DURATIONS.work = workMin * 60;
   DURATIONS.break = breakMin * 60;
+  DURATIONS.long_break = breakMin * 3 * 60;
 }
 
 export function setPhase(phase: PomodoroPhase) {

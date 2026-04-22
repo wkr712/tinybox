@@ -4,6 +4,7 @@
     user, currentView, previousView, fetchLoginStatus, fetchUserPlaylists, currentSong, isPlaying,
     pauseMusic, resumeMusic,
   } from "../../../stores/music";
+  import { get } from "svelte/store";
   import QrLogin from "./QrLogin.svelte";
   import PlaylistView from "./PlaylistView.svelte";
   import TrackList from "./TrackList.svelte";
@@ -24,9 +25,10 @@
     unsubs.push(isPlaying.subscribe((v) => (playing = v)));
 
     const ok = await fetchLoginStatus();
-    if (ok && u) {
+    const currentUser = get(user);
+    if (ok && currentUser) {
       currentView.set("discover");
-      await fetchUserPlaylists(u.user_id);
+      await fetchUserPlaylists(currentUser.user_id);
     }
   });
 
