@@ -11,6 +11,7 @@ export const currentSong = writable<NcmSong | null>(null);
 export const lyrics = writable<LyricLine[]>([]);
 export const isPlaying = writable(false);
 export const currentView = writable<MusicView>("login");
+export const previousView = writable<MusicView>("playlists");
 export const searchResults = writable<NcmSong[]>([]);
 export const searchQuery = writable("");
 export const volume = writable(0.8);

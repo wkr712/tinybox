@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
   import {
-    user, currentView, fetchLoginStatus, fetchUserPlaylists, currentSong, isPlaying,
+    user, currentView, previousView, fetchLoginStatus, fetchUserPlaylists, currentSong, isPlaying,
     pauseMusic, resumeMusic,
   } from "../../../stores/music";
   import QrLogin from "./QrLogin.svelte";
@@ -54,7 +54,7 @@
       >搜索</button>
       {#if song}
         <button
-          onclick={() => currentView.set('nowplaying')}
+          onclick={() => { previousView.set(view); currentView.set('nowplaying'); }}
           class="px-2 py-1 text-[10px] rounded {view === 'nowplaying' ? 'text-accent-cyan bg-accent-cyan/10' : 'text-white/30 hover:text-white/50'}"
         >播放</button>
       {/if}

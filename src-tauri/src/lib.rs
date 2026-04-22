@@ -37,6 +37,11 @@ pub fn run() {
 
             app.manage(AudioState::new(app.handle().clone()));
 
+            // Initialize NCM cookie from disk
+            if let Ok(data_dir) = app.path().app_data_dir() {
+                app.state::<NcmState>().init_data_dir(data_dir);
+            }
+
             let monitor = ClipboardMonitor::new(app.handle().clone(), 100);
             app.state::<ClipboardMonitorState>()
                 .0

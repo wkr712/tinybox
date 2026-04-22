@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from "svelte";
   import {
     tracks, currentSong, playSong, isPlaying,
-    formatDuration, currentView, currentPlaylist, lyrics,
+    formatDuration, currentView, currentPlaylist, lyrics, previousView,
   } from "../../../stores/music";
 
   let list = $state<any[]>([]);
@@ -28,6 +28,7 @@
   }
 
   function showNowPlaying() {
+    previousView.set("tracks");
     currentView.set("nowplaying");
   }
 </script>

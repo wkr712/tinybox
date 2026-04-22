@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { generateQr, checkQr, fetchLoginStatus, currentView } from "../../../stores/music";
+  import { generateQr, checkQr, fetchLoginStatus, fetchUserPlaylists, currentView, user } from "../../../stores/music";
+  import { get } from "svelte/store";
 
   let qrUrl = $state("");
   let qrKey = $state("");
@@ -28,7 +29,11 @@
   function startPolling() {
     if (pollTimer) clearInterval(pollTimer);
     let expired = false;
-    const timeout = setTimeout(() => { expired = true; status = "expired"; }, 300000);
+    const timeout = setTimeout(() => {
+      expired = true;
+      status = "expired";
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    }, 300000);
 
     pollTimer = setInterval(async () => {
       if (expired) return;
@@ -44,7 +49,11 @@
           clearInterval(pollTimer!);
           clearTimeout(timeout);
           const ok = await fetchLoginStatus();
-          if (ok) currentView.set("playlists");
+          if (ok) {
+            const u = get(user);
+            if (u) await fetchUserPlaylists(u.user_id);
+            currentView.set("discover");
+          }
         }
       } catch {
         // ignore

@@ -2,9 +2,10 @@
   import { onMount, onDestroy } from "svelte";
   import {
     currentSong, isPlaying, lyrics, playProgress, pauseMusic, resumeMusic,
-    stopMusic, setVolume, volume, currentView, formatDuration,
+    stopMusic, setVolume, volume, currentView, previousView, formatDuration,
     tracks, playSong,
   } from "../../../stores/music";
+  import { get } from "svelte/store";
 
   let song = $state<any>(null);
   let playing = $state(false);
@@ -87,7 +88,7 @@
 <div class="h-full flex flex-col">
   <!-- Header -->
   <div class="flex items-center gap-2 pb-3">
-    <button onclick={() => currentView.set('tracks')} class="text-white/30 hover:text-white/60">
+    <button onclick={() => currentView.set(get(previousView) as any || 'tracks')} class="text-white/30 hover:text-white/60">
       <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <span class="text-xs text-white/40">正在播放</span>
