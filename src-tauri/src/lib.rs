@@ -14,6 +14,7 @@ pub struct ClipboardMonitorState(Mutex<Option<ClipboardMonitor>>);
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -42,7 +43,7 @@ pub fn run() {
                 app.state::<NcmState>().init_data_dir(data_dir);
             }
 
-            let monitor = ClipboardMonitor::new(app.handle().clone(), 100);
+            let monitor = ClipboardMonitor::new(app.handle().clone());
             app.state::<ClipboardMonitorState>()
                 .0
                 .lock()

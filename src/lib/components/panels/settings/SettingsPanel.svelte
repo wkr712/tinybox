@@ -144,6 +144,25 @@
     </div>
   </section>
 
+  <!-- Music -->
+  <section>
+    <div class="text-[10px] text-white/20 mb-2 px-1">音乐</div>
+    <div class="flex items-center justify-between px-3 py-2">
+      <span class="text-xs text-white/60">默认音量</span>
+      <div class="flex items-center gap-2">
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={s.music_volume || 80}
+          onchange={(e) => saveNumberSetting('music_volume', (e.target as HTMLInputElement).value)}
+          class="w-20 accent-accent-cyan [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-accent-cyan [&::-webkit-slider-runnable-track]:h-0.5 [&::-webkit-slider-runnable-track]:bg-white/10 [&::-webkit-slider-runnable-track]:rounded-full"
+        />
+        <span class="text-[10px] text-white/40 w-6 text-right">{s.music_volume || 80}%</span>
+      </div>
+    </div>
+  </section>
+
   <!-- Hotkeys -->
   <section>
     <div class="text-[10px] text-white/20 mb-2 px-1">快捷键</div>

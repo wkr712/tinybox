@@ -188,6 +188,19 @@ listen<{ playing: boolean; error?: string }>("audio-state-changed", (event) => {
   isPlaying.set(event.payload.playing);
   if (!event.payload.playing && !event.payload.error) {
     stopProgressTimer();
+    // Auto-play next track when song ends naturally
+    let song: NcmSong | null = null;
+    let trackList: NcmSong[] = [];
+    currentSong.subscribe((v) => (song = v))();
+    tracks.subscribe((v) => (trackList = v))();
+    if (song && trackList.length > 0) {
+      const idx = trackList.findIndex((t) => t.id === song!.id);
+      if (idx >= 0 && idx < trackList.length - 1) {
+        playSong(trackList[idx + 1]);
+      } else {
+        currentSong.set(null);
+      }
+    }
   }
 });
 

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
   import {
-    clipboardHistory, searchQuery, initClipboardMonitor,
+    clipboardHistory, initClipboardMonitor,
     clearHistory, getFilteredItems, getPreview, timeAgo,
   } from "../../../stores/clipboard";
   import ClipboardItem from "./ClipboardItem.svelte";
@@ -17,7 +17,6 @@
 
   onMount(() => {
     unsubs.push(clipboardHistory.subscribe((v) => (items = v)));
-    unsubs.push(searchQuery.subscribe((v) => (query = v)));
 
     initClipboardMonitor();
   });

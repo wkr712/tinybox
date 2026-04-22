@@ -13,6 +13,7 @@
   let filter = $state<"all" | "active" | "completed">("all");
   let newText = $state("");
   let newPriority = $state<"low" | "normal" | "high">("normal");
+  let newDueDate = $state<string>("");
 
   let seconds = $state(25 * 60);
   let total = $state(25 * 60);
@@ -50,8 +51,9 @@
   function handleAdd() {
     const text = newText.trim();
     if (!text) return;
-    addTodo(text, newPriority);
+    addTodo(text, newPriority, newDueDate || null);
     newText = "";
+    newDueDate = "";
   }
 
   function handleKeydown(e: KeyboardEvent) {
@@ -146,6 +148,11 @@
         <option value="normal" class="bg-[#1a1a2e]">· 中</option>
         <option value="high" class="bg-[#1a1a2e]">↑ 高</option>
       </select>
+      <input
+        type="date"
+        bind:value={newDueDate}
+        class="bg-transparent text-[10px] px-1 py-1.5 outline-none text-white/50 cursor-pointer"
+      />
       <input
         type="text"
         bind:value={newText}

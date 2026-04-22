@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { notes, searchQuery, createNote, loadNotes } from "../../../stores/notes";
+  import { notes, createNote, loadNotes } from "../../../stores/notes";
   import NoteCard from "./NoteCard.svelte";
   import NoteEditor from "./NoteEditor.svelte";
   import { editingNoteId } from "../../../stores/notes";
@@ -19,7 +19,6 @@
   onMount(() => {
     unsubs.push(notes.subscribe((v) => (allNotes = v)));
     unsubs.push(editingNoteId.subscribe((v) => (currentEditId = v)));
-    unsubs.push(searchQuery.subscribe((v) => (query = v)));
 
     loadNotes();
   });

@@ -7,7 +7,7 @@ pub struct ClipboardMonitor {
 }
 
 impl ClipboardMonitor {
-    pub fn new(app_handle: tauri::AppHandle, max_history: usize) -> Self {
+    pub fn new(app_handle: tauri::AppHandle) -> Self {
         let (tx, rx) = mpsc::channel::<()>();
 
         std::thread::spawn(move || {
@@ -16,7 +16,6 @@ impl ClipboardMonitor {
                 Err(_) => return,
             };
             let mut last_text = String::new();
-            let mut count: usize = 0;
 
             loop {
                 if rx.try_recv().is_ok() {
@@ -27,12 +26,6 @@ impl ClipboardMonitor {
                     if !text.is_empty() && text != last_text {
                         last_text = text.clone();
                         let _ = app_handle.emit("clipboard-changed", &text);
-                        count += 1;
-
-                        if count % 50 == 0 {
-                            let _ = app_handle
-                                .emit("clipboard-cleanup", serde_json::json!(max_history));
-                        }
                     }
                 }
 
