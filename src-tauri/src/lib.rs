@@ -32,9 +32,10 @@ pub fn run() {
         )
         .manage(ClipboardMonitorState(Mutex::new(None)))
         .manage(NcmState::new())
-        .manage(AudioState::new())
         .setup(|app| {
             tray::create_tray(app)?;
+
+            app.manage(AudioState::new(app.handle().clone()));
 
             let monitor = ClipboardMonitor::new(app.handle().clone(), 100);
             app.state::<ClipboardMonitorState>()

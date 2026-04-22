@@ -2,24 +2,34 @@
   import { onMount } from "svelte";
   import { settings, saveSetting } from "../../../stores/settings";
   import { getCurrentWindow } from "@tauri-apps/api/window";
+  import { getVersion } from "@tauri-apps/api/app";
   import { registerHotkeys } from "../../../utils/hotkeys";
+  import { updateDurations } from "../../../stores/todo";
+  import { setMaxHistory } from "../../../stores/clipboard";
 
   let s: any = {};
   settings.subscribe((v) => (s = v));
 
   let editing: string | null = $state(null);
   let editValue = $state("");
-  let version = $state("0.9.0");
+  let version = $state("1.0.0");
 
   onMount(async () => {
     try {
-      version = await getCurrentWindow().appWindow?.getSize().then(() => "0.9.0").catch(() => "0.9.0") || "0.9.0";
-      const v = await import("@tauri-apps/api/app");
-      version = await v.getVersion();
+      version = await getVersion();
     } catch {
       // fallback
     }
+    applySettings(s);
   });
+
+  function applySettings(vals: any) {
+    const workMin = parseInt(vals.pomodoro_work_duration) || 25;
+    const breakMin = parseInt(vals.pomodoro_break_duration) || 5;
+    updateDurations(workMin, breakMin);
+    const max = parseInt(vals.clipboard_max_history) || 100;
+    setMaxHistory(max);
+  }
 
   async function toggleAlwaysOnTop() {
     const newVal = s.always_on_top !== "true";
@@ -50,6 +60,11 @@
     } else if (editing && e.key === "Escape") {
       cancelEdit();
     }
+  }
+
+  async function saveNumberSetting(key: string, value: string) {
+    await saveSetting(key, value);
+    applySettings(s);
   }
 </script>
 
@@ -88,7 +103,7 @@
         <input
           type="number"
           value={s.clipboard_max_history}
-          onchange={(e) => saveSetting('clipboard_max_history', (e.target as HTMLInputElement).value)}
+          onchange={(e) => saveNumberSetting('clipboard_max_history', (e.target as HTMLInputElement).value)}
           class="w-16 bg-white/[0.05] text-[11px] text-white/60 px-2 py-0.5 rounded text-right outline-none focus:ring-1 focus:ring-accent-cyan/30"
         />
       </div>
@@ -104,7 +119,7 @@
         <input
           type="number"
           value={s.pomodoro_work_duration}
-          onchange={(e) => saveSetting('pomodoro_work_duration', (e.target as HTMLInputElement).value)}
+          onchange={(e) => saveNumberSetting('pomodoro_work_duration', (e.target as HTMLInputElement).value)}
           class="w-16 bg-white/[0.05] text-[11px] text-white/60 px-2 py-0.5 rounded text-right outline-none focus:ring-1 focus:ring-accent-cyan/30"
         />
       </div>
@@ -113,7 +128,7 @@
         <input
           type="number"
           value={s.pomodoro_break_duration}
-          onchange={(e) => saveSetting('pomodoro_break_duration', (e.target as HTMLInputElement).value)}
+          onchange={(e) => saveNumberSetting('pomodoro_break_duration', (e.target as HTMLInputElement).value)}
           class="w-16 bg-white/[0.05] text-[11px] text-white/60 px-2 py-0.5 rounded text-right outline-none focus:ring-1 focus:ring-accent-cyan/30"
         />
       </div>

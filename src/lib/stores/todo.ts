@@ -56,6 +56,11 @@ const DURATIONS: Record<PomodoroPhase, number> = {
   long_break: 15 * 60,
 };
 
+export function updateDurations(workMin: number, breakMin: number) {
+  DURATIONS.work = workMin * 60;
+  DURATIONS.break = breakMin * 60;
+}
+
 export function setPhase(phase: PomodoroPhase) {
   timerPhase.set(phase);
   timerTotal.set(DURATIONS[phase]);

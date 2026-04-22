@@ -1,5 +1,6 @@
 import { writable } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import type { NcmSong, NcmPlaylist, NcmUser, LyricLine, MusicView, HotSearch } from "../types/music";
 
 export const user = writable<NcmUser | null>(null);
@@ -82,7 +83,6 @@ export async function playSong(song: NcmSong) {
 
   await invoke("music_play", { url });
   currentSong.set(song);
-  isPlaying.set(true);
   playProgress.set(0);
   startProgressTimer();
 
@@ -114,19 +114,16 @@ export async function searchSongs(keywords: string) {
 
 export async function pauseMusic() {
   await invoke("music_pause");
-  isPlaying.set(false);
   stopProgressTimer();
 }
 
 export async function resumeMusic() {
   await invoke("music_resume");
-  isPlaying.set(true);
   startProgressTimer();
 }
 
 export async function stopMusic() {
   await invoke("music_stop");
-  isPlaying.set(false);
   currentSong.set(null);
   playProgress.set(0);
   stopProgressTimer();
@@ -183,6 +180,14 @@ export async function fetchHotSearches() {
     );
   }
 }
+
+// Listen for audio state changes from Rust backend
+listen<{ playing: boolean; error?: string }>("audio-state-changed", (event) => {
+  isPlaying.set(event.payload.playing);
+  if (!event.payload.playing && !event.payload.error) {
+    stopProgressTimer();
+  }
+});
 
 // Progress tracking
 function startProgressTimer() {

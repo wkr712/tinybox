@@ -6,7 +6,11 @@ import type { ClipboardItem } from "../types/clipboard";
 
 export const clipboardHistory = writable<ClipboardItem[]>([]);
 export const searchQuery = writable("");
-export const maxHistory = 100;
+export let maxHistory = 100;
+
+export function setMaxHistory(val: number) {
+  maxHistory = val;
+}
 
 let initialized = false;
 

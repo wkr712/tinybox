@@ -2,6 +2,7 @@ use rodio::Source;
 use std::sync::mpsc::{channel, Sender};
 use std::sync::Mutex;
 use std::time::Duration;
+use tauri::Emitter;
 
 enum AudioMsg {
     Play(String),
@@ -14,11 +15,10 @@ enum AudioMsg {
 pub struct AudioState {
     tx: Mutex<Option<Sender<AudioMsg>>>,
     pub current_url: Mutex<String>,
-    pub is_playing: Mutex<bool>,
 }
 
 impl AudioState {
-    pub fn new() -> Self {
+    pub fn new(app_handle: tauri::AppHandle) -> Self {
         let (tx, rx) = channel::<AudioMsg>();
 
         std::thread::spawn(move || {
@@ -71,25 +71,46 @@ impl AudioState {
                                     sink = Some(new_sink);
                                     _handle = Some(h);
                                     _stream = Some(s);
+                                    let _ = app_handle.emit(
+                                        "audio-state-changed",
+                                        serde_json::json!({"playing": true}),
+                                    );
                                 } else {
                                     drop(new_sink);
                                     drop(h);
                                     drop(s);
+                                    let _ = app_handle.emit(
+                                        "audio-state-changed",
+                                        serde_json::json!({"playing": false, "error": "failed to decode audio"}),
+                                    );
                                 }
                             } else {
                                 drop(s);
+                                let _ = app_handle.emit(
+                                    "audio-state-changed",
+                                    serde_json::json!({"playing": false, "error": "failed to create audio sink"}),
+                                );
                             }
+                        } else {
+                            let _ = app_handle.emit(
+                                "audio-state-changed",
+                                serde_json::json!({"playing": false, "error": "no audio output device"}),
+                            );
                         }
                     }
                     AudioMsg::Pause => {
                         if let Some(s) = sink.as_ref() {
                             s.pause();
                         }
+                        let _ = app_handle
+                            .emit("audio-state-changed", serde_json::json!({"playing": false}));
                     }
                     AudioMsg::Resume => {
                         if let Some(s) = sink.as_ref() {
                             s.play();
                         }
+                        let _ = app_handle
+                            .emit("audio-state-changed", serde_json::json!({"playing": true}));
                     }
                     AudioMsg::Stop => {
                         if let Some(s) = sink.take() {
@@ -97,6 +118,8 @@ impl AudioState {
                         }
                         _stream.take();
                         _handle.take();
+                        let _ = app_handle
+                            .emit("audio-state-changed", serde_json::json!({"playing": false}));
                     }
                     AudioMsg::SetVolume(vol) => {
                         if let Some(s) = sink.as_ref() {
@@ -110,7 +133,6 @@ impl AudioState {
         Self {
             tx: Mutex::new(Some(tx)),
             current_url: Mutex::new(String::new()),
-            is_playing: Mutex::new(false),
         }
     }
 }
@@ -125,7 +147,6 @@ impl AudioPlayer {
                 .map_err(|e| e.to_string())?;
         }
         *state.current_url.lock().map_err(|e| e.to_string())? = url.to_string();
-        *state.is_playing.lock().map_err(|e| e.to_string())? = true;
         Ok(())
     }
 
@@ -134,7 +155,6 @@ impl AudioPlayer {
         if let Some(tx) = tx.as_ref() {
             tx.send(AudioMsg::Pause).map_err(|e| e.to_string())?;
         }
-        *state.is_playing.lock().map_err(|e| e.to_string())? = false;
         Ok(())
     }
 
@@ -143,7 +163,6 @@ impl AudioPlayer {
         if let Some(tx) = tx.as_ref() {
             tx.send(AudioMsg::Resume).map_err(|e| e.to_string())?;
         }
-        *state.is_playing.lock().map_err(|e| e.to_string())? = true;
         Ok(())
     }
 
@@ -153,7 +172,6 @@ impl AudioPlayer {
             tx.send(AudioMsg::Stop).map_err(|e| e.to_string())?;
         }
         *state.current_url.lock().map_err(|e| e.to_string())? = String::new();
-        *state.is_playing.lock().map_err(|e| e.to_string())? = false;
         Ok(())
     }
 
