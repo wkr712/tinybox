@@ -55,7 +55,7 @@ async function getCurrentHistory(): Promise<ClipboardItem[]> {
 }
 
 async function getCount(): Promise<number> {
-  const result = await select<{ cnt: number }[]>(
+  const result = await select<{ cnt: number }>(
     "SELECT COUNT(*) as cnt FROM clipboard_history"
   );
   return result[0]?.cnt ?? 0;

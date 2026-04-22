@@ -18,7 +18,7 @@ export async function createNote() {
     "INSERT INTO notes (title, content, color) VALUES ('', '', '#1a1a2e')"
   );
   await loadNotes();
-  const rows = await select<{ id: number }[]>(
+  const rows = await select<{ id: number }>(
     "SELECT id FROM notes ORDER BY id DESC LIMIT 1"
   );
   if (rows.length > 0) {

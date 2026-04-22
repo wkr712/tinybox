@@ -114,7 +114,7 @@ export async function completePhase() {
 }
 
 export async function loadTodaySessions() {
-  const result = await select<{ cnt: number }[]>(
+  const result = await select<{ cnt: number }>(
     "SELECT COUNT(*) as cnt FROM pomodoro_sessions WHERE type = 'work' AND completed = 1 AND date(started_at) = date('now', 'localtime')"
   );
   todaySessions.set(result[0]?.cnt ?? 0);

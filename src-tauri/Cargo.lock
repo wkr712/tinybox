@@ -6007,7 +6007,7 @@ dependencies = [
 
 [[package]]
 name = "tinybox"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "arboard",
  "ncm-api-rs",

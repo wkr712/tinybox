@@ -14,7 +14,6 @@ enum AudioMsg {
 
 pub struct AudioState {
     tx: Mutex<Option<Sender<AudioMsg>>>,
-    pub current_url: Mutex<String>,
 }
 
 impl AudioState {
@@ -132,7 +131,6 @@ impl AudioState {
 
         Self {
             tx: Mutex::new(Some(tx)),
-            current_url: Mutex::new(String::new()),
         }
     }
 }
@@ -146,7 +144,6 @@ impl AudioPlayer {
             tx.send(AudioMsg::Play(url.to_string()))
                 .map_err(|e| e.to_string())?;
         }
-        *state.current_url.lock().map_err(|e| e.to_string())? = url.to_string();
         Ok(())
     }
 
@@ -171,7 +168,6 @@ impl AudioPlayer {
         if let Some(tx) = tx.as_ref() {
             tx.send(AudioMsg::Stop).map_err(|e| e.to_string())?;
         }
-        *state.current_url.lock().map_err(|e| e.to_string())? = String::new();
         Ok(())
     }
 
