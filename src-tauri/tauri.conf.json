@@ -41,6 +41,12 @@
       }
     ]
   },
+  "plugins": {
+    "updater": {
+      "endpoints": [],
+      "pubkey": ""
+    }
+  },
   "bundle": {
     "active": true,
     "targets": ["nsis"],

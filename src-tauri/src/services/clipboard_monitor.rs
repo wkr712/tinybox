@@ -3,7 +3,7 @@ use std::time::Duration;
 use tauri::Emitter;
 
 pub struct ClipboardMonitor {
-    running: mpsc::Sender<()>,
+    _stop: mpsc::Sender<()>,
 }
 
 impl ClipboardMonitor {
@@ -29,7 +29,6 @@ impl ClipboardMonitor {
                         let _ = app_handle.emit("clipboard-changed", &text);
                         count += 1;
 
-                        // Auto-cleanup hint every 50 items
                         if count % 50 == 0 {
                             let _ = app_handle
                                 .emit("clipboard-cleanup", serde_json::json!(max_history));
@@ -41,10 +40,6 @@ impl ClipboardMonitor {
             }
         });
 
-        ClipboardMonitor { running: tx }
-    }
-
-    pub fn stop(&self) {
-        let _ = self.running.send(());
+        ClipboardMonitor { _stop: tx }
     }
 }

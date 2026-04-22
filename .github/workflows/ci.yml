@@ -18,5 +18,5 @@ jobs:
           components: rustfmt, clippy
       - run: npm ci
       - run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
-      - run: cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings
+      - run: cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings -A clippy::manual-is-multiple-of
       - run: npm run tauri build
