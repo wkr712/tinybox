@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { writable, get } from "svelte/store";
 import { select, execute } from "../utils/db";
 
 interface SettingsMap {
@@ -48,7 +48,5 @@ export async function saveSetting(key: string, value: string) {
 }
 
 export function getSetting(key: keyof SettingsMap): string | undefined {
-  let val: string | undefined;
-  settings.subscribe((s) => (val = s[key]))();
-  return val;
+  return get(settings)[key];
 }

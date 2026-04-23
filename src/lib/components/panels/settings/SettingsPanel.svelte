@@ -71,9 +71,11 @@
     }
   }
 
-  async function saveNumberSetting(key: string, value: string) {
-    await saveSetting(key, value);
-    applySettings({ ...s, [key]: value });
+  async function saveNumberSetting(key: string, value: string, min = 1, max = 999) {
+    const num = parseInt(value) || min;
+    const clamped = Math.max(min, Math.min(max, num));
+    await saveSetting(key, String(clamped));
+    applySettings({ ...s, [key]: String(clamped) });
   }
 </script>
 
@@ -84,7 +86,7 @@
     <div class="space-y-1">
       <button
         onclick={toggleAlwaysOnTop}
-        class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/[0.03] transition-colors"
+        class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/[0.03] active:scale-[0.99] transition-all"
       >
         <span class="text-xs text-white/60">窗口置顶</span>
         <span class="text-[10px] {s.always_on_top === 'true' ? 'text-accent-cyan' : 'text-white/20'}">
@@ -100,7 +102,7 @@
     <div class="space-y-1">
       <button
         onclick={() => saveSetting('clipboard_monitor_enabled', s.clipboard_monitor_enabled === 'true' ? 'false' : 'true')}
-        class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/[0.03] transition-colors"
+        class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/[0.03] active:scale-[0.99] transition-all"
       >
         <span class="text-xs text-white/60">剪贴板监听</span>
         <span class="text-[10px] {s.clipboard_monitor_enabled === 'true' ? 'text-accent-cyan' : 'text-white/20'}">
@@ -112,7 +114,7 @@
         <input
           type="number"
           value={s.clipboard_max_history}
-          onchange={(e) => saveNumberSetting('clipboard_max_history', (e.target as HTMLInputElement).value)}
+          onchange={(e) => saveNumberSetting('clipboard_max_history', (e.target as HTMLInputElement).value, 10, 1000)}
           class="w-16 bg-white/[0.05] text-[11px] text-white/60 px-2 py-0.5 rounded text-right outline-none focus:ring-1 focus:ring-accent-cyan/30"
         />
       </div>
@@ -128,7 +130,7 @@
         <input
           type="number"
           value={s.pomodoro_work_duration}
-          onchange={(e) => saveNumberSetting('pomodoro_work_duration', (e.target as HTMLInputElement).value)}
+          onchange={(e) => saveNumberSetting('pomodoro_work_duration', (e.target as HTMLInputElement).value, 1, 120)}
           class="w-16 bg-white/[0.05] text-[11px] text-white/60 px-2 py-0.5 rounded text-right outline-none focus:ring-1 focus:ring-accent-cyan/30"
         />
       </div>
@@ -137,7 +139,7 @@
         <input
           type="number"
           value={s.pomodoro_break_duration}
-          onchange={(e) => saveNumberSetting('pomodoro_break_duration', (e.target as HTMLInputElement).value)}
+          onchange={(e) => saveNumberSetting('pomodoro_break_duration', (e.target as HTMLInputElement).value, 1, 60)}
           class="w-16 bg-white/[0.05] text-[11px] text-white/60 px-2 py-0.5 rounded text-right outline-none focus:ring-1 focus:ring-accent-cyan/30"
         />
       </div>
@@ -184,12 +186,12 @@
               class="w-32 bg-accent-cyan/10 text-[10px] text-accent-cyan px-2 py-0.5 rounded outline-none"
               placeholder="按键..."
             />
-            <button onclick={() => saveEdit(item.key)} class="ml-1 text-[10px] text-accent-cyan hover:underline">确定</button>
-            <button onclick={cancelEdit} class="ml-1 text-[10px] text-white/20 hover:text-white/40">取消</button>
+            <button onclick={() => saveEdit(item.key)} class="ml-1 text-[10px] text-accent-cyan hover:underline active:scale-90 transition-transform">确定</button>
+            <button onclick={cancelEdit} class="ml-1 text-[10px] text-white/20 hover:text-white/40 active:scale-90 transition-transform">取消</button>
           {:else}
             <div class="flex items-center gap-1">
               <span class="text-[10px] text-white/25 bg-white/[0.05] px-1.5 py-0.5 rounded">{s[item.key]}</span>
-              <button onclick={() => startEdit(item.key)} class="text-white/20 hover:text-white/50">
+              <button onclick={() => startEdit(item.key)} class="text-white/20 hover:text-white/50" aria-label="编辑快捷键">
                 <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               </button>
             </div>

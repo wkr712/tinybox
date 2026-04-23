@@ -1,6 +1,7 @@
 use crate::services::audio_player::{AudioPlayer, AudioState};
 use crate::services::ncm::{NcmService, NcmState};
 use serde::Serialize;
+use std::time::Duration;
 use tauri::State;
 
 #[derive(Serialize)]
@@ -110,19 +111,16 @@ pub fn music_set_volume(state: State<'_, AudioState>, volume: f32) -> Result<(),
 }
 
 #[tauri::command]
+pub fn music_seek(state: State<'_, AudioState>, position_ms: u64) -> Result<(), String> {
+    AudioPlayer::seek(&state, Duration::from_millis(position_ms))
+}
+
+#[tauri::command]
 pub async fn music_personalized(
     state: State<'_, NcmState>,
     limit: i64,
 ) -> Result<serde_json::Value, String> {
     NcmService::personalized(&state, limit).await
-}
-
-#[tauri::command]
-pub async fn music_personalized_newsong(
-    state: State<'_, NcmState>,
-    limit: i64,
-) -> Result<serde_json::Value, String> {
-    NcmService::personalized_newsong(&state, limit).await
 }
 
 #[tauri::command]

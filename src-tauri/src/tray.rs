@@ -18,8 +18,13 @@ pub fn create_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         &[&show, &hide, &separator1, &check_update, &separator2, &quit],
     )?;
 
+    let icon = app
+        .default_window_icon()
+        .cloned()
+        .ok_or("No default window icon found")?;
+
     TrayIconBuilder::new()
-        .icon(app.default_window_icon().unwrap().clone())
+        .icon(icon)
         .menu(&menu)
         .tooltip(format!("TinyBox v{} - 小巧工具箱", env!("CARGO_PKG_VERSION")))
         .on_menu_event(|app, event| match event.id.as_ref() {

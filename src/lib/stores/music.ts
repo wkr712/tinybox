@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { writable, get } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import type { NcmSong, NcmPlaylist, NcmUser, LyricLine, MusicView, HotSearch } from "../types/music";
@@ -13,7 +13,6 @@ export const isPlaying = writable(false);
 export const currentView = writable<MusicView>("login");
 export const previousView = writable<MusicView>("playlists");
 export const searchResults = writable<NcmSong[]>([]);
-export const searchQuery = writable("");
 export const volume = writable(0.8);
 
 // v0.7.0 additions
@@ -88,7 +87,7 @@ export async function playSong(song: NcmSong) {
   playProgress.set(0);
   startProgressTimer();
 
-  fetchLyrics(song.id);
+  fetchLyrics(song.id).catch(() => {});
   return true;
 }
 
@@ -134,6 +133,11 @@ export async function stopMusic() {
 export async function setVolume(vol: number) {
   await invoke("music_set_volume", { volume: vol });
   volume.set(vol);
+}
+
+export async function seekTo(positionSeconds: number) {
+  await invoke("music_seek", { positionMs: Math.round(positionSeconds * 1000) });
+  playProgress.set(positionSeconds);
 }
 
 // v0.7.0: Recommendations
@@ -184,31 +188,45 @@ export async function fetchHotSearches() {
 }
 
 // Listen for audio state changes from Rust backend
-listen<{ playing: boolean; error?: string }>("audio-state-changed", (event) => {
-  isPlaying.set(event.payload.playing);
-  if (!event.payload.playing && !event.payload.error) {
-    stopProgressTimer();
-    // Auto-play next track when song ends naturally
-    let song: NcmSong | null = null;
-    let trackList: NcmSong[] = [];
-    currentSong.subscribe((v) => (song = v))();
-    tracks.subscribe((v) => (trackList = v))();
-    if (song && trackList.length > 0) {
-      const idx = trackList.findIndex((t) => t.id === song!.id);
-      if (idx >= 0 && idx < trackList.length - 1) {
-        playSong(trackList[idx + 1]);
-      } else {
-        currentSong.set(null);
+let _audioUnlisten: (() => void) | null = null;
+
+export async function initAudioListener() {
+  if (_audioUnlisten) return;
+  _audioUnlisten = await listen<{ playing: boolean; error?: string; reason?: string }>("audio-state-changed", (event) => {
+    isPlaying.set(event.payload.playing);
+    if (!event.payload.playing) {
+      stopProgressTimer();
+      if (event.payload.reason === "ended") {
+        const song = get(currentSong);
+        const trackList = get(tracks);
+        if (song && trackList.length > 0) {
+          const idx = trackList.findIndex((t) => t.id === song.id);
+          if (idx >= 0 && idx < trackList.length - 1) {
+            playSong(trackList[idx + 1]);
+          }
+        }
       }
     }
+  });
+}
+
+export function destroyAudioListener() {
+  if (_audioUnlisten) {
+    _audioUnlisten();
+    _audioUnlisten = null;
   }
-});
+}
 
 // Progress tracking
 function startProgressTimer() {
   stopProgressTimer();
   progressTimer = setInterval(() => {
-    playProgress.update((p) => p + 0.2);
+    playProgress.update((p) => {
+      const song = get(currentSong);
+      const maxSeconds = (song?.duration || 0) / 1000;
+      if (maxSeconds > 0 && p + 0.2 >= maxSeconds) return p;
+      return p + 0.2;
+    });
   }, 200);
 }
 

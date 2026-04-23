@@ -2,7 +2,6 @@
   import { onMount, onDestroy } from "svelte";
   import {
     user, currentView, previousView, fetchLoginStatus, fetchUserPlaylists, currentSong, isPlaying,
-    pauseMusic, resumeMusic,
   } from "../../../stores/music";
   import { get } from "svelte/store";
   import QrLogin from "./QrLogin.svelte";
@@ -44,20 +43,20 @@
     <div class="flex items-center gap-1 pb-2 border-b border-white/5 mb-2">
       <button
         onclick={() => currentView.set('discover')}
-        class="px-2 py-1 text-[10px] rounded {view === 'discover' ? 'text-accent-cyan bg-accent-cyan/10' : 'text-white/30 hover:text-white/50'}"
+        class="px-2 py-1 text-[10px] rounded active:scale-95 transition-all {view === 'discover' ? 'text-accent-cyan bg-accent-cyan/10' : 'text-white/30 hover:text-white/50'}"
       >发现</button>
       <button
         onclick={() => currentView.set('playlists')}
-        class="px-2 py-1 text-[10px] rounded {view === 'playlists' ? 'text-accent-cyan bg-accent-cyan/10' : 'text-white/30 hover:text-white/50'}"
+        class="px-2 py-1 text-[10px] rounded active:scale-95 transition-all {view === 'playlists' ? 'text-accent-cyan bg-accent-cyan/10' : 'text-white/30 hover:text-white/50'}"
       >歌单</button>
       <button
         onclick={() => currentView.set('search')}
-        class="px-2 py-1 text-[10px] rounded {view === 'search' ? 'text-accent-cyan bg-accent-cyan/10' : 'text-white/30 hover:text-white/50'}"
+        class="px-2 py-1 text-[10px] rounded active:scale-95 transition-all {view === 'search' ? 'text-accent-cyan bg-accent-cyan/10' : 'text-white/30 hover:text-white/50'}"
       >搜索</button>
       {#if song}
         <button
           onclick={() => { previousView.set(view); currentView.set('nowplaying'); }}
-          class="px-2 py-1 text-[10px] rounded {view === 'nowplaying' ? 'text-accent-cyan bg-accent-cyan/10' : 'text-white/30 hover:text-white/50'}"
+          class="px-2 py-1 text-[10px] rounded active:scale-95 transition-all {view === 'nowplaying' ? 'text-accent-cyan bg-accent-cyan/10' : 'text-white/30 hover:text-white/50'}"
         >播放</button>
       {/if}
     </div>

@@ -1,9 +1,8 @@
-import { writable } from "svelte/store";
+import { writable, get } from "svelte/store";
 import { select, execute } from "../utils/db";
 import type { Note } from "../types/note";
 
 export const notes = writable<Note[]>([]);
-export const searchQuery = writable("");
 export const editingNoteId = writable<number | null>(null);
 
 export async function loadNotes() {
@@ -26,11 +25,14 @@ export async function createNote() {
   await loadNotes();
 }
 
+const NOTE_COLUMNS = new Set(["title", "content", "color", "pinned"]);
+
 export async function updateNote(id: number, fields: Partial<Pick<Note, "title" | "content" | "color" | "pinned">>) {
   const sets: string[] = [];
   const values: unknown[] = [];
 
   for (const [key, value] of Object.entries(fields)) {
+    if (!NOTE_COLUMNS.has(key)) continue;
     sets.push(`${key} = ?`);
     values.push(value);
   }
@@ -42,13 +44,16 @@ export async function updateNote(id: number, fields: Partial<Pick<Note, "title" 
 }
 
 export async function deleteNote(id: number) {
-  await execute("DELETE FROM notes WHERE id = ?", [id]);
+  const snapshot = get(notes);
+  notes.update(items => items.filter(n => n.id !== id));
   editingNoteId.set(null);
-  await loadNotes();
+  execute("DELETE FROM notes WHERE id = ?", [id]).catch(() => notes.set(snapshot));
 }
 
 export async function togglePin(id: number, currentPinned: number) {
-  await updateNote(id, { pinned: currentPinned ? 0 : 1 });
+  const newVal = currentPinned ? 0 : 1;
+  notes.update(items => items.map(n => n.id === id ? { ...n, pinned: newVal } : n));
+  updateNote(id, { pinned: newVal }).catch(() => loadNotes());
 }
 
 export function getFilteredNotes(allNotes: Note[], query: string): Note[] {

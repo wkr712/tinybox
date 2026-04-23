@@ -27,28 +27,35 @@
 
   function save() {
     if (saveTimeout) clearTimeout(saveTimeout);
+    const id = lastNoteId;
+    const t = title;
+    const c = content;
     saveTimeout = setTimeout(() => {
-      updateNote(note.id, { title, content });
+      updateNote(id, { title: t, content: c });
     }, 300);
   }
 
-  function close() {
-    updateNote(note.id, { title, content });
+  async function close() {
+    if (saveTimeout) {
+      clearTimeout(saveTimeout);
+      saveTimeout = null;
+    }
+    await updateNote(lastNoteId, { title, content });
     editingNoteId.set(null);
   }
 
   function changeColor(color: string) {
-    updateNote(note.id, { color });
+    updateNote(lastNoteId, { color });
     showColors = false;
   }
 
   function handleTogglePin() {
-    togglePin(note.id, note.pinned);
+    togglePin(lastNoteId, note.pinned);
   }
 
   function confirmDelete() {
     if (confirm("删除这条便签？")) {
-      deleteNote(note.id);
+      deleteNote(lastNoteId);
     }
   }
 </script>

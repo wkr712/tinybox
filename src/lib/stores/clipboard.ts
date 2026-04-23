@@ -6,7 +6,6 @@ import type { ClipboardItem } from "../types/clipboard";
 import { getSetting } from "./settings";
 
 export const clipboardHistory = writable<ClipboardItem[]>([]);
-export const searchQuery = writable("");
 export let maxHistory = 100;
 
 export function setMaxHistory(val: number) {
@@ -21,7 +20,7 @@ export async function initClipboardMonitor() {
 
   await loadHistory();
 
-  await listen<string>("clipboard-changed", async (event) => {
+  const unlisten = await listen<string>("clipboard-changed", async (event) => {
     const enabled = getSetting("clipboard_monitor_enabled");
     if (enabled !== "true") return;
 
@@ -50,6 +49,11 @@ export async function initClipboardMonitor() {
 
     await loadHistory();
   });
+
+  // Store unlisten for potential future cleanup
+  if (typeof window !== "undefined") {
+    (window as any).__clipboardUnlisten = unlisten;
+  }
 }
 
 async function getCurrentHistory(): Promise<ClipboardItem[]> {

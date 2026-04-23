@@ -1,6 +1,7 @@
 import { register, unregister } from "@tauri-apps/plugin-global-shortcut";
+import { get } from "svelte/store";
 import { settings } from "../stores/settings";
-import { activePanel, expandWindow, collapseWindow } from "../stores/app";
+import { activePanel, expandWindow, collapseWindow, getLastPanel } from "../stores/app";
 import { pauseMusic, resumeMusic, currentView, isPlaying } from "../stores/music";
 
 let registered: string[] = [];
@@ -34,23 +35,16 @@ export async function registerHotkeys() {
 }
 
 async function toggleSidebar() {
-  let panel: string | null = null;
-  const unsub = activePanel.subscribe((v) => { panel = v; });
-  unsub();
-
+  const panel = get(activePanel);
   if (panel) {
     await collapseWindow();
   } else {
-    await expandWindow("notes");
+    await expandWindow(getLastPanel());
   }
 }
 
 async function togglePlayPause() {
-  let playing = false;
-  const unsub = isPlaying.subscribe((v) => { playing = v; });
-  unsub();
-
-  if (playing) {
+  if (get(isPlaying)) {
     await pauseMusic();
   } else {
     await resumeMusic();
@@ -63,8 +57,5 @@ async function showLyrics() {
 }
 
 function getSettings(): Record<string, string> {
-  let s: any = {};
-  const unsub = settings.subscribe((v) => { s = v; });
-  unsub();
-  return s;
+  return get(settings) as unknown as Record<string, string>;
 }

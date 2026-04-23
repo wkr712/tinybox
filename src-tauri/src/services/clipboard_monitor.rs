@@ -18,8 +18,9 @@ impl ClipboardMonitor {
             let mut last_text = String::new();
 
             loop {
-                if rx.try_recv().is_ok() {
-                    break;
+                match rx.try_recv() {
+                    Ok(_) | Err(std::sync::mpsc::TryRecvError::Disconnected) => break,
+                    Err(std::sync::mpsc::TryRecvError::Empty) => {}
                 }
 
                 if let Ok(text) = clipboard.get_text() {

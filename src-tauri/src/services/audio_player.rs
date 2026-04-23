@@ -6,10 +6,12 @@ use tauri::Emitter;
 
 enum AudioMsg {
     Play(String),
+    PlayBytes(Vec<u8>),
     Pause,
     Resume,
     Stop,
     SetVolume(f32),
+    Seek(Duration),
 }
 
 pub struct AudioState {
@@ -19,6 +21,7 @@ pub struct AudioState {
 impl AudioState {
     pub fn new(app_handle: tauri::AppHandle) -> Self {
         let (tx, rx) = channel::<AudioMsg>();
+        let tx_clone = tx.clone();
 
         std::thread::spawn(move || {
             let mut _stream: Option<rodio::OutputStream> = None;
@@ -40,33 +43,49 @@ impl AudioState {
                             _stream.take();
                             _handle.take();
 
-                            if let Ok((s, h)) = rodio::OutputStream::try_default() {
-                                if let Ok(new_sink) = rodio::Sink::try_new(&h) {
-                                    let mut ok = false;
-                                    if url.starts_with("http://") || url.starts_with("https://") {
-                                        if let Some(bytes) = http_client
-                                            .get(&url)
-                                            .send()
-                                            .ok()
-                                            .and_then(|r| r.bytes().ok())
-                                        {
-                                            if let Ok(source) =
-                                                rodio::Decoder::new(std::io::Cursor::new(bytes))
-                                            {
-                                                new_sink.append(source.convert_samples::<f32>());
-                                                ok = true;
-                                            }
-                                        }
-                                    } else if let Ok(file) = std::fs::File::open(&url) {
-                                        if let Ok(source) =
-                                            rodio::Decoder::new(std::io::BufReader::new(file))
-                                        {
+                            let tx_clone = tx_clone.clone();
+                            if url.starts_with("http://") || url.starts_with("https://") {
+                                let client = http_client.clone();
+                                std::thread::spawn(move || {
+                                    let bytes = client
+                                        .get(&url)
+                                        .send()
+                                        .ok()
+                                        .and_then(|r| r.bytes().ok())
+                                        .map(|b| b.to_vec());
+                                    if let Some(data) = bytes {
+                                        let _ = tx_clone.send(AudioMsg::PlayBytes(data));
+                                    } else {
+                                        let _ = tx_clone.send(AudioMsg::Stop);
+                                    }
+                                });
+                            } else if let Ok(file) = std::fs::File::open(&url) {
+                                if let Ok(source) =
+                                    rodio::Decoder::new(std::io::BufReader::new(file))
+                                {
+                                    if let Ok((s, h)) = rodio::OutputStream::try_default() {
+                                        if let Ok(new_sink) = rodio::Sink::try_new(&h) {
                                             new_sink.append(source.convert_samples::<f32>());
-                                            ok = true;
+                                            new_sink.play();
+                                            sink = Some(new_sink);
+                                            _handle = Some(h);
+                                            _stream = Some(s);
+                                            let _ = app_handle.emit(
+                                                "audio-state-changed",
+                                                serde_json::json!({"playing": true}),
+                                            );
                                         }
                                     }
-
-                                    if ok {
+                                }
+                            }
+                        }
+                        AudioMsg::PlayBytes(data) => {
+                            if let Ok((s, h)) = rodio::OutputStream::try_default() {
+                                if let Ok(new_sink) = rodio::Sink::try_new(&h) {
+                                    if let Ok(source) =
+                                        rodio::Decoder::new(std::io::Cursor::new(data))
+                                    {
+                                        new_sink.append(source.convert_samples::<f32>());
                                         new_sink.play();
                                         sink = Some(new_sink);
                                         _handle = Some(h);
@@ -103,7 +122,7 @@ impl AudioState {
                                 s.pause();
                                 let _ = app_handle.emit(
                                     "audio-state-changed",
-                                    serde_json::json!({"playing": false}),
+                                    serde_json::json!({"playing": false, "reason": "paused"}),
                                 );
                             }
                         }
@@ -122,12 +141,19 @@ impl AudioState {
                             }
                             _stream.take();
                             _handle.take();
-                            let _ = app_handle
-                                .emit("audio-state-changed", serde_json::json!({"playing": false}));
+                            let _ = app_handle.emit(
+                                "audio-state-changed",
+                                serde_json::json!({"playing": false, "reason": "stopped"}),
+                            );
                         }
                         AudioMsg::SetVolume(vol) => {
                             if let Some(s) = sink.as_ref() {
-                                s.set_volume(vol);
+                                s.set_volume(vol.clamp(0.0, 2.0));
+                            }
+                        }
+                        AudioMsg::Seek(pos) => {
+                            if let Some(s) = sink.as_ref() {
+                                let _ = s.try_seek(pos);
                             }
                         }
                     },
@@ -140,7 +166,7 @@ impl AudioState {
                                 _handle.take();
                                 let _ = app_handle.emit(
                                     "audio-state-changed",
-                                    serde_json::json!({"playing": false}),
+                                    serde_json::json!({"playing": false, "reason": "ended"}),
                                 );
                             }
                         }
@@ -196,6 +222,15 @@ impl AudioPlayer {
         let tx = state.tx.lock().map_err(|e| e.to_string())?;
         if let Some(tx) = tx.as_ref() {
             tx.send(AudioMsg::SetVolume(vol))
+                .map_err(|e| e.to_string())?;
+        }
+        Ok(())
+    }
+
+    pub fn seek(state: &AudioState, pos: Duration) -> Result<(), String> {
+        let tx = state.tx.lock().map_err(|e| e.to_string())?;
+        if let Some(tx) = tx.as_ref() {
+            tx.send(AudioMsg::Seek(pos))
                 .map_err(|e| e.to_string())?;
         }
         Ok(())

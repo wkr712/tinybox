@@ -35,7 +35,7 @@
 
 <div class="h-full flex flex-col">
   <div class="flex items-center gap-2 pb-3">
-    <button onclick={() => currentView.set('playlists')} class="text-white/30 hover:text-white/60">
+    <button onclick={() => currentView.set('playlists')} class="text-white/30 hover:text-white/60 active:scale-90 transition-all" aria-label="返回">
       <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     {#if pl}
@@ -50,7 +50,7 @@
     {#each list as track, i (track.id)}
       <button
         onclick={() => handlePlay(track)}
-        class="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg transition-colors text-left {song?.id === track.id ? 'bg-accent-cyan/10' : 'hover:bg-white/[0.03]'}"
+        class="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg active:scale-[0.99] transition-all text-left {song?.id === track.id ? 'bg-accent-cyan/10' : 'hover:bg-white/[0.03]'}"
       >
         <span class="text-[10px] text-white/15 w-5 text-right shrink-0">{i + 1}</span>
         <div class="flex-1 min-w-0">
@@ -64,8 +64,8 @@
 
   {#if song}
     <div class="pt-2 border-t border-white/5">
-      <button onclick={showNowPlaying} class="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/[0.04]">
-        <img src={song.pic_url + "?param=80y80"} alt="" class="w-8 h-8 rounded" />
+      <button onclick={showNowPlaying} class="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/[0.04] active:scale-[0.99] transition-all">
+        <img src={(song.pic_url || '') + "?param=80y80"} alt="" class="w-8 h-8 rounded" />
         <div class="flex-1 min-w-0">
           <div class="text-xs text-white/80 truncate">{song.name}</div>
           <div class="text-[10px] text-white/30 truncate">{song.artists}</div>

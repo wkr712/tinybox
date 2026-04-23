@@ -47,7 +47,8 @@
     isDragOver.set(true);
   }
 
-  function handleDragLeave() {
+  function handleDragLeave(e: DragEvent) {
+    if (e.currentTarget && e.relatedTarget && (e.currentTarget as HTMLElement).contains(e.relatedTarget as Node)) return;
     dragOver = false;
     isDragOver.set(false);
   }

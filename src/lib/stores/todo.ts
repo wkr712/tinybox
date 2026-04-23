@@ -1,6 +1,6 @@
-import { writable } from "svelte/store";
+import { writable, get } from "svelte/store";
 import { select, execute } from "../utils/db";
-import type { Todo, PomodoroSession, PomodoroPhase, TimerState } from "../types/todo";
+import type { Todo, PomodoroPhase, TimerState } from "../types/todo";
 
 // Todos
 export const todos = writable<Todo[]>([]);
@@ -22,24 +22,26 @@ export async function addTodo(text: string, priority: "low" | "normal" | "high" 
 }
 
 export async function toggleTodo(id: number, completed: number) {
-  await execute("UPDATE todos SET completed = ?, updated_at = datetime('now', 'localtime') WHERE id = ?", [
-    completed ? 0 : 1,
+  const newVal = completed ? 0 : 1;
+  todos.update(items => items.map(t => t.id === id ? { ...t, completed: newVal } : t));
+  execute("UPDATE todos SET completed = ?, updated_at = datetime('now', 'localtime') WHERE id = ?", [
+    newVal,
     id,
-  ]);
-  await loadTodos();
+  ]).catch(() => loadTodos());
 }
 
 export async function deleteTodo(id: number) {
-  await execute("DELETE FROM todos WHERE id = ?", [id]);
-  await loadTodos();
+  const snapshot = get(todos);
+  todos.update(items => items.filter(t => t.id !== id));
+  execute("DELETE FROM todos WHERE id = ?", [id]).catch(() => todos.set(snapshot));
 }
 
 export async function updateTodoPriority(id: number, priority: "low" | "normal" | "high") {
-  await execute("UPDATE todos SET priority = ?, updated_at = datetime('now', 'localtime') WHERE id = ?", [
+  todos.update(items => items.map(t => t.id === id ? { ...t, priority } : t));
+  execute("UPDATE todos SET priority = ?, updated_at = datetime('now', 'localtime') WHERE id = ?", [
     priority,
     id,
-  ]);
-  await loadTodos();
+  ]).catch(() => loadTodos());
 }
 
 // Pomodoro Timer
@@ -69,14 +71,6 @@ export function setPhase(phase: PomodoroPhase) {
   timerState.set("idle");
 }
 
-export function startTimer() {
-  timerState.set("running");
-}
-
-export function pauseTimer() {
-  timerState.set("paused");
-}
-
 export function resetTimer() {
   const phase = getPhase();
   timerSeconds.set(DURATIONS[phase]);
@@ -84,15 +78,12 @@ export function resetTimer() {
 }
 
 function getPhase(): PomodoroPhase {
-  let p: PomodoroPhase = "work";
-  timerPhase.subscribe((v) => (p = v))();
-  return p;
+  return get(timerPhase);
 }
 
 export async function completePhase() {
   const phase = getPhase();
-  let count = 0;
-  pomodoroCount.subscribe((v) => (count = v))();
+  let count = get(pomodoroCount);
 
   await execute(
     "INSERT INTO pomodoro_sessions (duration, type, completed, started_at, ended_at) VALUES (?, ?, 1, datetime('now', 'localtime'), datetime('now', 'localtime'))",

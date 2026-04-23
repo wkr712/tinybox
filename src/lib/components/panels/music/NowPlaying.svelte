@@ -3,7 +3,7 @@
   import {
     currentSong, isPlaying, lyrics, playProgress, pauseMusic, resumeMusic,
     stopMusic, setVolume, volume, currentView, previousView, formatDuration,
-    tracks, playSong,
+    tracks, playSong, seekTo,
   } from "../../../stores/music";
   import { get } from "svelte/store";
 
@@ -16,12 +16,13 @@
   let unsubs: (() => void)[] = [];
 
   let lyricsContainer: HTMLDivElement | undefined = $state();
+  let progressTrackEl: HTMLDivElement | undefined = $state();
+  let progressDragging = $state(false);
 
   let currentIdx = $derived(
     song ? trackList.findIndex((t) => t.id === song.id) : -1
   );
 
-  // Find the current lyric line index based on progress
   let activeLyricIdx = $derived.by(() => {
     for (let i = lrc.length - 1; i >= 0; i--) {
       if (progress >= lrc[i].time) return i;
@@ -29,9 +30,10 @@
     return -1;
   });
 
-  // Auto-scroll lyrics to active line
+  let lastScrolledIdx = $state(-1);
   $effect(() => {
-    if (activeLyricIdx >= 0 && lyricsContainer) {
+    if (activeLyricIdx >= 0 && activeLyricIdx !== lastScrolledIdx && lyricsContainer) {
+      lastScrolledIdx = activeLyricIdx;
       const lineEl = lyricsContainer.querySelector(`[data-idx="${activeLyricIdx}"]`);
       if (lineEl) {
         lineEl.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -39,7 +41,6 @@
     }
   });
 
-  // Progress bar as percentage of duration
   let progressPercent = $derived(
     song && song.duration > 0 ? Math.min((progress * 1000) / song.duration * 100, 100) : 0
   );
@@ -56,6 +57,7 @@
   onDestroy(() => {
     unsubs.forEach((u) => u());
     unsubs = [];
+    cleanupProgressListeners();
   });
 
   async function togglePlay() {
@@ -83,22 +85,56 @@
     const v = parseFloat(target.value);
     setVolume(v);
   }
+
+  // Progress bar seek
+  function seekFromEvent(e: MouseEvent) {
+    if (!progressTrackEl || !song || !song.duration) return;
+    const rect = progressTrackEl.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const targetSeconds = pct * (song.duration / 1000);
+    seekTo(targetSeconds);
+  }
+
+  function handleProgressDown(e: MouseEvent) {
+    progressDragging = true;
+    seekFromEvent(e);
+    window.addEventListener("mousemove", handleProgressMove);
+    window.addEventListener("mouseup", handleProgressUp);
+  }
+
+  function handleProgressMove(e: MouseEvent) {
+    if (progressDragging) seekFromEvent(e);
+  }
+
+  function handleProgressUp() {
+    progressDragging = false;
+    cleanupProgressListeners();
+  }
+
+  function cleanupProgressListeners() {
+    window.removeEventListener("mousemove", handleProgressMove);
+    window.removeEventListener("mouseup", handleProgressUp);
+  }
 </script>
 
 <div class="h-full flex flex-col">
   <!-- Header -->
   <div class="flex items-center gap-2 pb-3">
-    <button onclick={() => currentView.set(get(previousView) as any || 'tracks')} class="text-white/30 hover:text-white/60">
+    <button onclick={() => currentView.set(get(previousView) as any || 'tracks')} class="text-white/30 hover:text-white/60" aria-label="返回">
       <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <span class="text-xs text-white/40">正在播放</span>
   </div>
 
   {#if song}
-    <!-- Compact cover + controls row -->
+    <!-- Compact cover + info -->
     <div class="flex items-center gap-3 pb-3">
-      <div class="w-12 h-12 rounded-lg overflow-hidden shrink-0 shadow-md shadow-black/30">
-        <img src={song.pic_url + '?param=200y200'} alt="" class="w-full h-full object-cover" />
+      <div class="w-12 h-12 rounded-full overflow-hidden shrink-0 shadow-md shadow-black/30">
+        <img
+          src={(song.pic_url || '') + '?param=200y200'}
+          alt=""
+          class="w-full h-full object-cover album-spin {playing ? '' : 'paused'}"
+        />
       </div>
       <div class="flex-1 min-w-0">
         <div class="text-sm text-white/90 truncate">{song.name}</div>
@@ -106,10 +142,20 @@
       </div>
     </div>
 
-    <!-- Progress bar -->
+    <!-- Progress bar (interactive) -->
     <div class="px-1 pb-2">
-      <div class="h-0.5 bg-white/10 rounded-full overflow-hidden">
-        <div class="h-full bg-accent-cyan/60 rounded-full transition-all duration-200" style="width: {progressPercent}%"></div>
+      <div
+        bind:this={progressTrackEl}
+        class="progress-track"
+        role="slider"
+        tabindex="0"
+        aria-label="播放进度"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(progressPercent)}
+        onmousedown={handleProgressDown}
+      >
+        <div class="h-full bg-accent-cyan/60 rounded-full {playing && !progressDragging ? 'progress-playing' : ''}" style="width: {progressPercent}%"></div>
       </div>
       <div class="flex justify-between mt-1">
         <span class="text-[9px] text-white/20">{formatDuration(progress * 1000)}</span>
@@ -119,20 +165,20 @@
 
     <!-- Controls -->
     <div class="flex items-center justify-center gap-3 pb-2">
-      <button onclick={playPrev} class="w-7 h-7 rounded-full flex items-center justify-center text-white/40 hover:text-white/70 transition-colors">
+      <button onclick={playPrev} class="w-7 h-7 rounded-full flex items-center justify-center text-white/40 hover:text-white/70 transition-all active:scale-90" aria-label="上一首">
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2"/></svg>
       </button>
-      <button onclick={togglePlay} class="w-9 h-9 rounded-full bg-accent-cyan/20 flex items-center justify-center text-accent-cyan hover:bg-accent-cyan/30 transition-colors">
+      <button onclick={togglePlay} class="w-9 h-9 rounded-full bg-accent-cyan/20 flex items-center justify-center text-accent-cyan hover:bg-accent-cyan/30 transition-all active:scale-90" aria-label={playing ? "暂停" : "播放"}>
         {#if playing}
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
         {:else}
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         {/if}
       </button>
-      <button onclick={playNext} class="w-7 h-7 rounded-full flex items-center justify-center text-white/40 hover:text-white/70 transition-colors">
+      <button onclick={playNext} class="w-7 h-7 rounded-full flex items-center justify-center text-white/40 hover:text-white/70 transition-all active:scale-90" aria-label="下一首">
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"/></svg>
       </button>
-      <button onclick={stopMusic} class="w-6 h-6 rounded-full flex items-center justify-center text-white/25 hover:text-red-400 transition-colors ml-1">
+      <button onclick={stopMusic} class="w-6 h-6 rounded-full flex items-center justify-center text-white/25 hover:text-red-400 transition-all active:scale-90 ml-1" aria-label="停止">
         <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
       </button>
     </div>
@@ -159,7 +205,7 @@
           {#each lrc as line, i (line.time)}
             <div
               data-idx={i}
-              class="text-[11px] py-1 leading-relaxed transition-all duration-300 {i === activeLyricIdx
+              class="text-[11px] py-1 leading-relaxed transition-all duration-500 {i === activeLyricIdx
                 ? 'text-accent-cyan scale-[1.02] origin-left'
                 : i < activeLyricIdx
                   ? 'text-white/15'
@@ -182,3 +228,40 @@
     </div>
   {/if}
 </div>
+
+<style>
+  .progress-track {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: height 0.15s ease;
+  }
+
+  .progress-track:hover {
+    height: 6px;
+  }
+
+  .progress-playing {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .album-spin {
+    animation: subtle-spin 20s linear infinite;
+  }
+
+  .album-spin.paused {
+    animation-play-state: paused;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: none; }
+    50% { box-shadow: 0 0 8px rgba(0, 229, 255, 0.3); }
+  }
+
+  @keyframes subtle-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+</style>

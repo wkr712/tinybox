@@ -44,11 +44,9 @@ pub fn run() {
             }
 
             let monitor = ClipboardMonitor::new(app.handle().clone());
-            app.state::<ClipboardMonitorState>()
-                .0
-                .lock()
-                .unwrap()
-                .replace(monitor);
+            if let Ok(mut guard) = app.state::<ClipboardMonitorState>().0.lock() {
+                guard.replace(monitor);
+            }
 
             Ok(())
         })
@@ -71,8 +69,8 @@ pub fn run() {
             commands::music::music_resume,
             commands::music::music_stop,
             commands::music::music_set_volume,
+            commands::music::music_seek,
             commands::music::music_personalized,
-            commands::music::music_personalized_newsong,
             commands::music::music_recommend_songs,
             commands::music::music_search_hot,
         ])

@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from "svelte";
   import {
     clipboardHistory, initClipboardMonitor,
-    clearHistory, getFilteredItems, getPreview, timeAgo,
+    clearHistory, getFilteredItems,
   } from "../../../stores/clipboard";
   import ClipboardItem from "./ClipboardItem.svelte";
   import type { ClipboardItem as CI } from "../../../types/clipboard";
@@ -49,7 +49,7 @@
     </div>
     <button
       onclick={handleClear}
-      class="text-[10px] text-white/30 hover:text-red-400 px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
+      class="text-[10px] text-white/30 hover:text-red-400 px-2 py-1 rounded-lg hover:bg-white/5 active:scale-95 transition-all"
     >
       清空
     </button>

@@ -194,18 +194,6 @@ impl NcmService {
         Ok(resp.body)
     }
 
-    pub async fn personalized_newsong(state: &NcmState, limit: i64) -> Result<Value, String> {
-        let (client, cookie) = state.get_client_and_cookie()?;
-        let query = Query::new()
-            .param("limit", &limit.to_string())
-            .cookie(&cookie);
-        let resp = client
-            .personalized_newsong(&query)
-            .await
-            .map_err(|e| e.to_string())?;
-        Ok(resp.body)
-    }
-
     pub async fn recommend_songs(state: &NcmState) -> Result<Value, String> {
         let (client, cookie) = state.get_client_and_cookie()?;
         let query = Query::new().cookie(&cookie);

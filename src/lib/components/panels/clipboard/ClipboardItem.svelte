@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onDestroy } from "svelte";
+  import { fly } from "svelte/transition";
   import {
     toggleFavorite, deleteItem, copyToClipboard, getPreview, timeAgo,
   } from "../../../stores/clipboard";
@@ -7,11 +9,17 @@
   let { item }: { item: ClipboardItem } = $props();
   let copied = $state(false);
   let showActions = $state(false);
+  let copiedTimer: ReturnType<typeof setTimeout> | null = null;
+
+  onDestroy(() => {
+    if (copiedTimer) clearTimeout(copiedTimer);
+  });
 
   async function handleCopy() {
     await copyToClipboard(item.content);
     copied = true;
-    setTimeout(() => (copied = false), 1500);
+    if (copiedTimer) clearTimeout(copiedTimer);
+    copiedTimer = setTimeout(() => (copied = false), 1500);
   }
 
   function handleFavorite(e: MouseEvent) {
@@ -25,13 +33,16 @@
   }
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
 <div
-  class="group flex items-start gap-2 px-2.5 py-2 rounded-lg hover:bg-white/[0.03] transition-colors cursor-pointer"
+  class="group flex items-start gap-2 px-2.5 py-2 rounded-lg hover:bg-white/[0.03] active:scale-[0.99] transition-all duration-200 cursor-pointer"
   onclick={handleCopy}
   onmouseenter={() => (showActions = true)}
   onmouseleave={() => (showActions = false)}
   role="button"
   tabindex="0"
+  onkeydown={(e) => { if (e.key === "Enter") handleCopy(); }}
 >
   <div class="flex-1 min-w-0">
     <div class="text-xs text-white/70 leading-relaxed break-all">{getPreview(item.content, 120)}</div>
@@ -40,11 +51,13 @@
 
   <div class="flex items-center gap-0.5 shrink-0 {showActions || copied ? 'opacity-100' : 'opacity-0'} transition-opacity">
     {#if copied}
-      <span class="text-[10px] text-accent-cyan px-1">已复制</span>
+      <span class="copied-badge text-[10px] px-1.5 py-0.5 rounded" style="background: rgba(0,229,255,0.15); color: var(--color-accent-cyan);" transition:fly={{ y: -4, duration: 150 }}>
+        已复制
+      </span>
     {/if}
     <button
       onclick={handleFavorite}
-      class="w-5 h-5 rounded flex items-center justify-center hover:bg-white/10 transition-colors"
+      class="w-5 h-5 rounded flex items-center justify-center hover:bg-white/10 active:scale-90 transition-all"
       title={item.is_favorite ? "取消收藏" : "收藏"}
     >
       <svg class="w-3 h-3" style="color: {item.is_favorite ? '#ffd700' : 'rgba(255,255,255,0.3)'}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={item.is_favorite ? "currentColor" : "none"} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -53,7 +66,7 @@
     </button>
     <button
       onclick={handleDelete}
-      class="w-5 h-5 rounded flex items-center justify-center hover:bg-red-500/30 text-white/30 hover:text-red-400 transition-colors"
+      class="w-5 h-5 rounded flex items-center justify-center hover:bg-red-500/30 active:scale-90 text-white/30 hover:text-red-400 transition-all"
       title="删除"
     >
       <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

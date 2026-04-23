@@ -6,21 +6,24 @@
   import { editingNoteId } from "../../../stores/notes";
   import { getFilteredNotes } from "../../../stores/notes";
   import type { Note } from "../../../types/note";
+  import SkeletonLine from "../../shared/SkeletonLine.svelte";
 
   let allNotes = $state<Note[]>([]);
   let query = $state("");
   let currentEditId = $state<number | null>(null);
+  let loading = $state(true);
   let unsubs: (() => void)[] = [];
 
   let filtered = $derived(getFilteredNotes(allNotes, query));
   let pinned = $derived(filtered.filter((n) => n.pinned));
   let unpinned = $derived(filtered.filter((n) => !n.pinned));
 
-  onMount(() => {
-    unsubs.push(notes.subscribe((v) => (allNotes = v)));
+  onMount(async () => {
+    unsubs.push(notes.subscribe((v) => { allNotes = v; loading = false; }));
     unsubs.push(editingNoteId.subscribe((v) => (currentEditId = v)));
 
-    loadNotes();
+    await loadNotes();
+    loading = false;
   });
 
   onDestroy(() => {
@@ -47,7 +50,15 @@
   </div>
 
   <div class="flex-1 overflow-y-auto space-y-2 px-1">
-    {#if pinned.length > 0}
+    {#if loading}
+      {#each { length: 4 } as _}
+        <div class="rounded-xl p-3 border border-white/5 space-y-2">
+          <SkeletonLine width="70%" height="12px" />
+          <SkeletonLine width="100%" height="10px" />
+          <SkeletonLine width="40%" height="8px" />
+        </div>
+      {/each}
+    {:else if pinned.length > 0}
       <div class="text-[10px] text-white/30 uppercase tracking-wider mb-1">已置顶</div>
       {#each pinned as note (note.id)}
         {#if currentEditId === note.id}
