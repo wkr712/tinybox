@@ -2,7 +2,6 @@ use super::load_cookie;
 use super::persist_cookie;
 use super::MusicProvider;
 use async_trait::async_trait;
-use md5::{Digest, Md5};
 use serde_json::{json, Value};
 use std::path::PathBuf;
 use std::sync::Mutex;
@@ -105,12 +104,6 @@ fn merge_cookies(existing: &str, new: &str) -> String {
         .map(|(k, v)| format!("{}={}", k, v))
         .collect::<Vec<_>>()
         .join("; ")
-}
-
-fn sign(data: &str) -> String {
-    let mut hasher = Md5::new();
-    hasher.update(data.as_bytes());
-    format!("{:x}", hasher.finalize())
 }
 
 #[async_trait]

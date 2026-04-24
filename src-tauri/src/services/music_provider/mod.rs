@@ -11,6 +11,7 @@ pub mod qqmusic;
 
 #[async_trait]
 pub trait MusicProvider: Send + Sync {
+    #[allow(dead_code)]
     fn kind(&self) -> &str;
     async fn qr_generate(&self) -> Result<(String, String), String>;
     async fn qr_check(&self, key: &str) -> Result<Value, String>;
@@ -87,13 +88,6 @@ impl ProviderRegistry {
 
     pub fn get_active_kind(&self) -> Result<String, String> {
         Ok(self.active.lock().map_err(|e| e.to_string())?.clone())
-    }
-
-    pub fn get_provider(&self, kind: &str) -> Result<&dyn MusicProvider, String> {
-        self.providers
-            .get(kind)
-            .map(|p| p.as_ref())
-            .ok_or_else(|| format!("Provider '{}' not found", kind))
     }
 }
 
