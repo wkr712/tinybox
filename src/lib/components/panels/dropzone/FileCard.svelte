@@ -6,7 +6,7 @@
   let { file }: { file: DropZoneFile } = $props();
   let showActions = $state(false);
   let editingTags = $state(false);
-  let tagInput = $state(file.tags || "");
+  let tagInput = $state("");
 
   const iconMap: Record<string, string> = {
     image: "🖼", video: "🎬", audio: "🎵", pdf: "📄", zip: "📦", file: "📎",
