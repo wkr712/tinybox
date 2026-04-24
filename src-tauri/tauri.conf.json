@@ -26,7 +26,7 @@
         "width": 52,
         "height": 380,
         "minWidth": 52,
-        "minHeight": 48,
+        "minHeight": 56,
         "maxWidth": 420,
         "center": true,
         "decorations": false,

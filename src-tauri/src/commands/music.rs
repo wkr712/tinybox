@@ -11,9 +11,7 @@ pub struct QrResult {
 }
 
 #[tauri::command]
-pub async fn music_qr_generate(
-    registry: State<'_, ProviderRegistry>,
-) -> Result<QrResult, String> {
+pub async fn music_qr_generate(registry: State<'_, ProviderRegistry>) -> Result<QrResult, String> {
     let provider = registry.active_provider()?;
     let (key, qrurl) = provider.qr_generate().await?;
     Ok(QrResult { key, qrurl })
@@ -156,16 +154,12 @@ pub async fn music_set_provider(
 }
 
 #[tauri::command]
-pub async fn music_get_provider(
-    registry: State<'_, ProviderRegistry>,
-) -> Result<String, String> {
+pub async fn music_get_provider(registry: State<'_, ProviderRegistry>) -> Result<String, String> {
     registry.get_active_kind()
 }
 
 #[tauri::command]
-pub async fn music_logout(
-    registry: State<'_, ProviderRegistry>,
-) -> Result<(), String> {
+pub async fn music_logout(registry: State<'_, ProviderRegistry>) -> Result<(), String> {
     let provider = registry.active_provider()?;
     provider.logout().await
 }

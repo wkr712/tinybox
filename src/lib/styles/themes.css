@@ -6,35 +6,87 @@
   --color-accent-secondary: #b388ff;
   --color-dark-bg: #0e0e18;
   --color-dark-surface: #161625;
+  --color-dark-border: rgba(255, 255, 255, 0.08);
+  --color-text-primary: rgba(255, 255, 255, 0.92);
+  --color-text-secondary: rgba(255, 255, 255, 0.6);
+  --color-text-tertiary: rgba(255, 255, 255, 0.35);
+  --color-text-muted: rgba(255, 255, 255, 0.18);
+  --color-surface-3: rgba(255, 255, 255, 0.03);
+  --color-surface-5: rgba(255, 255, 255, 0.05);
+  --color-surface-8: rgba(255, 255, 255, 0.08);
+  --color-surface-12: rgba(255, 255, 255, 0.12);
+  --color-surface-15: rgba(255, 255, 255, 0.15);
+  --color-border-subtle: rgba(255, 255, 255, 0.04);
+  --color-border-default: rgba(255, 255, 255, 0.07);
+  --color-border-strong: rgba(255, 255, 255, 0.12);
 }
 
 [data-theme="ocean"] {
   --color-accent-primary: #4fc3f7;
-  --color-accent-secondary: #80deea;
-  --color-dark-bg: #0a1628;
-  --color-dark-surface: #101e36;
+  --color-accent-secondary: #26c6da;
+  --color-dark-bg: #061422;
+  --color-dark-surface: #0c1f36;
+  --color-dark-border: rgba(79, 195, 247, 0.1);
+  --color-text-primary: rgba(220, 240, 255, 0.92);
+  --color-text-secondary: rgba(180, 215, 240, 0.6);
+  --color-text-tertiary: rgba(140, 190, 220, 0.35);
+  --color-text-muted: rgba(100, 160, 200, 0.18);
+  --color-surface-3: rgba(79, 195, 247, 0.03);
+  --color-surface-5: rgba(79, 195, 247, 0.05);
+  --color-surface-8: rgba(79, 195, 247, 0.08);
+  --color-surface-12: rgba(79, 195, 247, 0.12);
+  --color-surface-15: rgba(79, 195, 247, 0.15);
+  --color-border-subtle: rgba(79, 195, 247, 0.06);
+  --color-border-default: rgba(79, 195, 247, 0.1);
+  --color-border-strong: rgba(79, 195, 247, 0.16);
 }
 
 [data-theme="rose"] {
   --color-accent-primary: #f48fb1;
   --color-accent-secondary: #ce93d8;
-  --color-dark-bg: #1a0e14;
-  --color-dark-surface: #261620;
+  --color-dark-bg: #180a12;
+  --color-dark-surface: #261420;
+  --color-dark-border: rgba(244, 143, 177, 0.1);
+  --color-text-primary: rgba(255, 220, 230, 0.92);
+  --color-text-secondary: rgba(240, 180, 200, 0.6);
+  --color-text-tertiary: rgba(220, 150, 180, 0.35);
+  --color-text-muted: rgba(200, 120, 160, 0.18);
+  --color-surface-3: rgba(244, 143, 177, 0.03);
+  --color-surface-5: rgba(244, 143, 177, 0.05);
+  --color-surface-8: rgba(244, 143, 177, 0.08);
+  --color-surface-12: rgba(244, 143, 177, 0.12);
+  --color-surface-15: rgba(244, 143, 177, 0.15);
+  --color-border-subtle: rgba(244, 143, 177, 0.06);
+  --color-border-default: rgba(244, 143, 177, 0.1);
+  --color-border-strong: rgba(244, 143, 177, 0.16);
 }
 
 [data-theme="forest"] {
   --color-accent-primary: #81c784;
-  --color-accent-secondary: #a5d6a7;
-  --color-dark-bg: #0e1a12;
-  --color-dark-surface: #162418;
+  --color-accent-secondary: #aed581;
+  --color-dark-bg: #0a160c;
+  --color-dark-surface: #14241a;
+  --color-dark-border: rgba(129, 199, 132, 0.1);
+  --color-text-primary: rgba(220, 245, 220, 0.92);
+  --color-text-secondary: rgba(180, 220, 180, 0.6);
+  --color-text-tertiary: rgba(140, 195, 140, 0.35);
+  --color-text-muted: rgba(100, 170, 100, 0.18);
+  --color-surface-3: rgba(129, 199, 132, 0.03);
+  --color-surface-5: rgba(129, 199, 132, 0.05);
+  --color-surface-8: rgba(129, 199, 132, 0.08);
+  --color-surface-12: rgba(129, 199, 132, 0.12);
+  --color-surface-15: rgba(129, 199, 132, 0.15);
+  --color-border-subtle: rgba(129, 199, 132, 0.06);
+  --color-border-default: rgba(129, 199, 132, 0.1);
+  --color-border-strong: rgba(129, 199, 132, 0.16);
 }
 
 [data-theme="light"] {
   --color-accent-primary: #0288d1;
   --color-accent-secondary: #7b1fa2;
-  --color-dark-bg: #f5f5f5;
+  --color-dark-bg: #f0f2f5;
   --color-dark-surface: #ffffff;
-  --color-dark-border: rgba(0, 0, 0, 0.08);
+  --color-dark-border: rgba(0, 0, 0, 0.1);
   --color-text-primary: rgba(0, 0, 0, 0.87);
   --color-text-secondary: rgba(0, 0, 0, 0.6);
   --color-text-tertiary: rgba(0, 0, 0, 0.38);
@@ -44,7 +96,7 @@
   --color-surface-8: rgba(0, 0, 0, 0.08);
   --color-surface-12: rgba(0, 0, 0, 0.12);
   --color-surface-15: rgba(0, 0, 0, 0.15);
-  --color-border-subtle: rgba(0, 0, 0, 0.04);
-  --color-border-default: rgba(0, 0, 0, 0.07);
-  --color-border-strong: rgba(0, 0, 0, 0.12);
+  --color-border-subtle: rgba(0, 0, 0, 0.06);
+  --color-border-default: rgba(0, 0, 0, 0.1);
+  --color-border-strong: rgba(0, 0, 0, 0.16);
 }

@@ -127,9 +127,9 @@
 }
 
 .sidebar-icon:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-5);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-default);
 }
 
 .sidebar-icon:hover::before {
@@ -237,7 +237,7 @@
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+  scrollbar-color: var(--color-surface-8) transparent;
 }
 
 /* ─── Global interactive polish ─── */

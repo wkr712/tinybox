@@ -230,8 +230,7 @@ impl AudioPlayer {
     pub fn seek(state: &AudioState, pos: Duration) -> Result<(), String> {
         let tx = state.tx.lock().map_err(|e| e.to_string())?;
         if let Some(tx) = tx.as_ref() {
-            tx.send(AudioMsg::Seek(pos))
-                .map_err(|e| e.to_string())?;
+            tx.send(AudioMsg::Seek(pos)).map_err(|e| e.to_string())?;
         }
         Ok(())
     }

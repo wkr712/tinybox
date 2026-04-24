@@ -1,9 +1,10 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
   import { get } from "svelte/store";
-  import { activePanel, expandWindow, collapseWindow, minimized, restoreFromIsland, minimizeToIsland, expandIslandForLyrics, shrinkIslandFromLyrics } from "../../stores/app";
+  import { activePanel, expandWindow, collapseWindow, minimized, restoreFromIsland, minimizeToIsland, minimizeToCat, restoreFromCat, expandIslandForLyrics, shrinkIslandFromLyrics } from "../../stores/app";
   import { currentSong, isPlaying, pauseMusic, resumeMusic, tracks, playSong, lyrics } from "../../stores/music";
   import IslandLyrics from "./IslandLyrics.svelte";
+  import CatMascot from "./CatMascot.svelte";
 
   const panels = [
     {
@@ -38,6 +39,7 @@
   let playing = $state(false);
   let lrc = $state<any[]>([]);
   let mounted = $state(false);
+  let catClicked = $state(0);
   let unsubs: (() => void)[] = [];
 
   onMount(() => {
@@ -103,49 +105,53 @@
     const idx = t.findIndex((tr: any) => tr.id === s.id);
     if (idx < t.length - 1) await playSong(t[idx + 1]);
   }
+
+  function handleCatClick() {
+    catClicked++;
+    if (catClicked >= 5) {
+      catClicked = 0;
+      minimizeToIsland();
+    }
+  }
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-  class="sidebar-root"
-  class:minimized={isMinimized}
+  class="sidebar-root {isMinimized ? 'cat-mode' : ''}"
   data-tauri-drag-region
 >
   {#if isMinimized}
-    <div class="island-content" data-tauri-drag-region>
+    <!-- Cat mascot minimized state -->
+    <div class="cat-container" data-tauri-drag-region>
+      <!-- svelte-ignore a11y_click_events_have_key_events -->
+      <div class="cat-mascot-wrap" onclick={handleCatClick} role="button" tabindex="0">
+        <CatMascot />
+      </div>
       {#if song}
-        <div class="island-player" data-tauri-drag-region>
-          <img src={(song.pic_url || '') + '?param=80y80'} alt="" class="island-cover" />
-          <div class="island-info" data-tauri-drag-region>
-            <div class="island-title">{song.name}</div>
-          </div>
-          <button class="island-btn-sm" onclick={islandPrev} aria-label="上一首">
+        <div class="cat-mini-controls">
+          <button class="cat-ctrl-btn" onclick={islandPrev} aria-label="上一首">
             <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4"/><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="3"/></svg>
           </button>
-          <button class="island-btn" onclick={togglePlay} aria-label="播放暂停">
+          <button class="cat-ctrl-btn play" onclick={togglePlay} aria-label="播放暂停">
             {#if playing}
               <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
             {:else}
               <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             {/if}
           </button>
-          <button class="island-btn-sm" onclick={islandNext} aria-label="下一首">
+          <button class="cat-ctrl-btn" onclick={islandNext} aria-label="下一首">
             <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="3"/></svg>
           </button>
-          <button class="island-btn-sm" onclick={restoreFromIsland} aria-label="恢复">
-            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-          </button>
         </div>
-        {#if playing && lrc.length > 0}
-          <IslandLyrics />
-        {/if}
-      {:else}
-        <button class="island-restore" onclick={restoreFromIsland} data-tauri-drag-region aria-label="恢复窗口">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-          <span>TinyBox</span>
-        </button>
+        <div class="cat-song-name">{song.name}</div>
+      {/if}
+      <button class="cat-restore" onclick={() => restoreFromCat()} aria-label="恢复">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+      {#if catClicked > 0}
+        <div class="cat-click-hint">{5 - catClicked} 次点击进入小岛模式</div>
       {/if}
     </div>
   {:else}
@@ -213,10 +219,10 @@
       <!-- Spacer pushes minimize to bottom -->
       <div class="sidebar-spacer" data-tauri-drag-region></div>
 
-      <!-- Minimize to island -->
+      <!-- Minimize to cat -->
       <button
         class="sidebar-minimize-btn"
-        onclick={() => minimizeToIsland()}
+        onclick={() => minimizeToCat()}
         title="最小化"
         aria-label="最小化"
       >
@@ -239,9 +245,10 @@
     height: 100%;
     position: relative;
     z-index: 2;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .sidebar-root.minimized {
+  .sidebar-root.cat-mode {
     width: 100%;
     height: 100%;
     padding: 0;
@@ -279,7 +286,7 @@
     width: 20px;
     height: 1px;
     margin: 6px 0;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+    background: linear-gradient(90deg, transparent, var(--color-border-default), transparent);
   }
 
   .sidebar-icons-bottom {
@@ -303,137 +310,139 @@
     justify-content: center;
     background: transparent;
     border: none;
-    color: rgba(255, 255, 255, 0.15);
+    color: var(--color-text-muted);
     cursor: pointer;
     transition: all 0.2s ease;
     margin-bottom: 2px;
   }
 
   .sidebar-minimize-btn:hover {
-    color: rgba(255, 255, 255, 0.45);
-    background: rgba(255, 255, 255, 0.04);
+    color: var(--color-text-tertiary);
+    background: var(--color-border-subtle);
   }
 
   .sidebar-minimize-btn:active {
     transform: scale(0.85);
   }
 
-  /* Dynamic Island inner */
-  .island-content {
-    width: 100%;
-    height: 100%;
+  /* Cat mascot minimized state */
+  .cat-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 0 6px;
+    width: 100%;
+    height: 100%;
     gap: 4px;
+    padding: 8px 4px;
+    animation: cat-appear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
-  .island-player {
+  @keyframes cat-appear {
+    0% { opacity: 0; transform: scale(0.6) rotate(-10deg); }
+    60% { transform: scale(1.08) rotate(2deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg); }
+  }
+
+  .cat-mascot-wrap {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .cat-mascot-wrap:hover {
+    transform: scale(1.12);
+  }
+
+  .cat-mascot-wrap:active {
+    transform: scale(0.9);
+  }
+
+  .cat-mini-controls {
     display: flex;
     align-items: center;
-    gap: 6px;
-    width: 100%;
-    flex-shrink: 0;
+    gap: 2px;
   }
 
-  .island-cover {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    object-fit: cover;
-    flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  .cat-ctrl-btn {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.3);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
   }
 
-  .island-info {
-    flex: 1;
-    min-width: 0;
+  .cat-ctrl-btn.play {
+    width: 18px;
+    height: 18px;
+    color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.06);
   }
 
-  .island-title {
-    font-size: 10px;
-    color: rgba(255, 255, 255, 0.8);
+  .cat-ctrl-btn:hover {
+    color: color-mix(in srgb, var(--color-accent-primary) 80%, transparent);
+    background: color-mix(in srgb, var(--color-accent-primary) 10%, transparent);
+  }
+
+  .cat-ctrl-btn:active {
+    transform: scale(0.8);
+  }
+
+  .cat-song-name {
+    font-size: 8px;
+    color: rgba(255, 255, 255, 0.3);
+    text-align: center;
+    max-width: 48px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  .island-btn {
+  .cat-restore {
     width: 20px;
     height: 20px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgba(255, 255, 255, 0.7);
-    background: rgba(255, 255, 255, 0.08);
-    border: none;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  .island-btn:hover {
-    background: color-mix(in srgb, var(--color-accent-primary) 15%, transparent);
-    color: color-mix(in srgb, var(--color-accent-primary) 90%, transparent);
-    box-shadow: 0 0 8px color-mix(in srgb, var(--color-accent-primary) 15%, transparent);
-  }
-
-  .island-btn:active {
-    transform: scale(0.85);
-  }
-
-  .island-btn-sm {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: rgba(255, 255, 255, 0.35);
+    color: rgba(255, 255, 255, 0.2);
     background: transparent;
     border: none;
     cursor: pointer;
-    flex-shrink: 0;
     transition: all 0.2s;
   }
 
-  .island-btn-sm:hover {
-    color: rgba(255, 255, 255, 0.85);
-    background: rgba(255, 255, 255, 0.08);
-  }
-
-  .island-btn-sm:active {
-    transform: scale(0.85);
-  }
-
-  .island-restore {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: none;
-    border: none;
-    color: rgba(255, 255, 255, 0.6);
-    cursor: pointer;
-    padding: 4px 10px;
-    border-radius: 16px;
-    transition: all 0.15s;
-  }
-
-  .island-restore:hover {
-    color: color-mix(in srgb, var(--color-accent-primary) 80%, transparent);
+  .cat-restore:hover {
+    color: color-mix(in srgb, var(--color-accent-primary) 70%, transparent);
     background: color-mix(in srgb, var(--color-accent-primary) 6%, transparent);
   }
 
-  .island-restore:active {
-    transform: scale(0.95);
+  .cat-restore:active {
+    transform: scale(0.85);
   }
 
-  .island-restore span {
-    font-size: 11px;
-    font-weight: 500;
+  .cat-click-hint {
+    font-size: 7px;
+    color: rgba(255, 255, 255, 0.15);
+    position: absolute;
+    bottom: 4px;
+    text-align: center;
+    animation: hint-fade 2s ease forwards;
+  }
+
+  @keyframes hint-fade {
+    0% { opacity: 0; }
+    20% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { opacity: 0; }
   }
 
   /* Mini player in sidebar */

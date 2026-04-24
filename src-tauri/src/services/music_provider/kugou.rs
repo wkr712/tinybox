@@ -36,10 +36,10 @@ impl KugouProvider {
 
     async fn api_get(&self, url: &str) -> Result<Value, String> {
         let cookie = self.get_cookie()?;
-        let mut req = self
-            .client
-            .get(url)
-            .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
+        let mut req = self.client.get(url).header(
+            "User-Agent",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        );
         if !cookie.is_empty() {
             req = req.header("Cookie", &cookie);
         }
@@ -75,10 +75,7 @@ impl MusicProvider for KugouProvider {
     }
 
     async fn qr_check(&self, key: &str) -> Result<Value, String> {
-        let url = format!(
-            "https://login-user.kugou.com/v1/scan_status?token={}",
-            key
-        );
+        let url = format!("https://login-user.kugou.com/v1/scan_status?token={}", key);
         let resp = self.api_get(&url).await?;
         if resp["data"]["status"].as_i64() == Some(3) {
             if let Some(cookie) = resp["data"]["cookie"].as_str() {
@@ -166,10 +163,7 @@ impl MusicProvider for KugouProvider {
             id
         );
         let resp = self.api_get(&url).await?;
-        let play_url = resp["data"]["play_url"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let play_url = resp["data"]["play_url"].as_str().unwrap_or("").to_string();
         if play_url.is_empty() {
             return Err("Song URL not available".to_string());
         }
@@ -183,10 +177,7 @@ impl MusicProvider for KugouProvider {
             id
         );
         let resp = self.api_get(&url).await?;
-        let lyrics = resp["data"]["lyrics"]
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let lyrics = resp["data"]["lyrics"].as_str().unwrap_or("").to_string();
         Ok(json!({"lrc": {"lyric": lyrics}}))
     }
 

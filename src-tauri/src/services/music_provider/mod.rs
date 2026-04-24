@@ -45,11 +45,7 @@ impl ProviderRegistry {
     }
 
     fn register_default_providers(&mut self) {
-        let data_dir = self
-            .data_dir
-            .lock()
-            .ok()
-            .and_then(|d| d.clone());
+        let data_dir = self.data_dir.lock().ok().and_then(|d| d.clone());
 
         if let Some(ref dir) = data_dir {
             let _ = fs::create_dir_all(dir);
@@ -101,6 +97,9 @@ pub fn persist_cookie(data_dir: &Option<PathBuf>, filename: &str, cookie: &str) 
 pub fn load_cookie(data_dir: &Option<PathBuf>, filename: &str) -> Option<String> {
     data_dir.as_ref().and_then(|dir| {
         let path = dir.join(filename);
-        fs::read_to_string(path).ok().map(|s| s.trim().to_string()).filter(|s| !s.is_empty())
+        fs::read_to_string(path)
+            .ok()
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
     })
 }

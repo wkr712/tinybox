@@ -49,7 +49,10 @@ impl QqMusicProvider {
         let mut req = client
             .post(BASE_URL)
             .header("Content-Type", "application/json")
-            .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
+            .header(
+                "User-Agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            );
 
         if !cookie.is_empty() {
             req = req.header("Cookie", &cookie);
@@ -170,13 +173,8 @@ impl MusicProvider for QqMusicProvider {
                 .as_str()
                 .unwrap_or("QQ Music User")
                 .to_string();
-            let avatar = data["data"]["headpic"]
-                .as_str()
-                .unwrap_or("")
-                .to_string();
-            let uid = data["data"]["uin"]
-                .as_i64()
-                .unwrap_or(0);
+            let avatar = data["data"]["headpic"].as_str().unwrap_or("").to_string();
+            let uid = data["data"]["uin"].as_i64().unwrap_or(0);
             Ok(json!({
                 "code": 200,
                 "account": {
@@ -326,9 +324,7 @@ impl MusicProvider for QqMusicProvider {
             .get("music.musichallSong.PlayLyricInfo")
             .cloned()
             .unwrap_or(json!({}));
-        let lyric_b64 = data["data"]["lyric"]
-            .as_str()
-            .unwrap_or("");
+        let lyric_b64 = data["data"]["lyric"].as_str().unwrap_or("");
         let lyric = standard_base64_decode(lyric_b64);
         Ok(json!({"lrc": {"lyric": lyric}}))
     }

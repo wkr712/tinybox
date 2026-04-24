@@ -5,7 +5,7 @@
   import Sidebar from "./lib/components/sidebar/Sidebar.svelte";
   import PanelHost from "./lib/components/panels/PanelHost.svelte";
   import ClipboardQuick from "./lib/components/ClipboardQuick.svelte";
-  import { activePanel, expanded, minimized, initWindowResizeTracking } from "./lib/stores/app";
+  import { activePanel, expanded, minimized, initWindowResizeTracking, minimizeToIsland, restoreFromCat } from "./lib/stores/app";
   import { loadSettings, settings } from "./lib/stores/settings";
   import { initAudioListener, destroyAudioListener } from "./lib/stores/music";
   import { clipboardQuickOpen } from "./lib/stores/clipboard";
@@ -91,15 +91,15 @@
     position: relative;
     overflow: hidden;
     border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(14, 14, 24, 0.92);
+    border: 1px solid var(--color-dark-border);
+    background: color-mix(in srgb, var(--color-dark-bg) 92%, transparent);
     backdrop-filter: blur(40px) saturate(200%);
     -webkit-backdrop-filter: blur(40px) saturate(200%);
     box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.02),
+      0 0 0 1px var(--color-border-subtle),
       0 12px 48px rgba(0, 0, 0, 0.5),
       0 2px 12px rgba(0, 0, 0, 0.25),
-      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      inset 0 1px 0 var(--color-surface-5);
     transition: border-radius 0.4s cubic-bezier(0.4, 0, 0.2, 1),
                 background 0.4s ease,
                 box-shadow 0.4s ease,
@@ -108,15 +108,15 @@
 
   .island-mode {
     border-radius: 22px;
-    border-color: rgba(255, 255, 255, 0.12);
-    background: rgba(10, 10, 18, 0.97);
+    border-color: var(--color-dark-border);
+    background: color-mix(in srgb, var(--color-dark-bg) 97%, transparent);
     backdrop-filter: blur(48px) saturate(210%);
     -webkit-backdrop-filter: blur(48px) saturate(210%);
     box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.04),
+      0 0 0 1px var(--color-border-subtle),
       0 6px 32px rgba(0, 0, 0, 0.6),
       0 0 60px rgba(0, 0, 0, 0.35),
       0 0 80px color-mix(in srgb, var(--color-accent-primary) 3%, transparent),
-      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      inset 0 1px 0 var(--color-surface-8);
   }
 </style>

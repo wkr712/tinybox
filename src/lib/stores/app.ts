@@ -9,6 +9,8 @@ const EXPANDED_WIDTH = SIDEBAR_WIDTH + PANEL_WIDTH;
 const ISLAND_WIDTH = 200;
 const ISLAND_HEIGHT = 48;
 const ISLAND_LYRICS_HEIGHT = 120;
+const MINI_CAT_WIDTH = 56;
+const MINI_CAT_HEIGHT = 200;
 const INITIAL_HEIGHT = 380;
 
 export const expanded = writable(false);
@@ -156,6 +158,47 @@ export async function collapseWindow() {
     activePanel.set(null);
     expanded.set(false);
     await applyWindowBoundsAnchored(COLLAPSED_WIDTH, savedHeight);
+  } finally {
+    setTimeout(() => { isTransitioning = false; }, 100);
+  }
+}
+
+export async function minimizeToCat() {
+  if (isTransitioning) return;
+  isTransitioning = true;
+  try {
+    const pos = await getCurrentPos();
+    lastNormalPos = pos;
+    activePanel.set(null);
+    expanded.set(false);
+    minimized.set(true);
+    const win = getCurrentWindow();
+    const screen = await getScreenSize();
+    const x = Math.round((screen.w - MINI_CAT_WIDTH) / 2);
+    const y = Math.round((screen.h - MINI_CAT_HEIGHT) / 2);
+    programmaticTarget = MINI_CAT_HEIGHT;
+    await win.setSize(new LogicalSize(MINI_CAT_WIDTH, MINI_CAT_HEIGHT));
+    await win.setPosition(new LogicalPosition(x, y));
+    setTimeout(() => { programmaticTarget = null; }, 500);
+  } finally {
+    setTimeout(() => { isTransitioning = false; }, 100);
+  }
+}
+
+export async function restoreFromCat() {
+  if (isTransitioning) return;
+  isTransitioning = true;
+  try {
+    minimized.set(false);
+    if (lastNormalPos) {
+      programmaticTarget = savedHeight;
+      const win = getCurrentWindow();
+      await win.setSize(new LogicalSize(COLLAPSED_WIDTH, savedHeight));
+      await win.setPosition(new LogicalPosition(lastNormalPos.x, lastNormalPos.y));
+      setTimeout(() => { programmaticTarget = null; }, 500);
+    } else {
+      await applyWindowBoundsCentered(COLLAPSED_WIDTH, savedHeight);
+    }
   } finally {
     setTimeout(() => { isTransitioning = false; }, 100);
   }
