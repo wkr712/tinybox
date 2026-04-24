@@ -9,6 +9,7 @@ interface SettingsMap {
   pomodoro_work_duration: string;
   pomodoro_break_duration: string;
   music_volume: string;
+  theme: string;
   hotkey_toggle_sidebar: string;
   hotkey_clipboard: string;
   hotkey_new_note: string;
@@ -24,6 +25,7 @@ const defaults: SettingsMap = {
   pomodoro_work_duration: "25",
   pomodoro_break_duration: "5",
   music_volume: "80",
+  theme: "midnight",
   hotkey_toggle_sidebar: "Alt+Space",
   hotkey_clipboard: "Control+Shift+V",
   hotkey_new_note: "Control+Shift+N",

@@ -4,7 +4,7 @@ mod tray;
 
 use services::audio_player::AudioState;
 use services::clipboard_monitor::ClipboardMonitor;
-use services::ncm::NcmState;
+use services::music_provider::ProviderRegistry;
 use std::sync::Mutex;
 use tauri::Manager;
 
@@ -32,15 +32,14 @@ pub fn run() {
                 .build(),
         )
         .manage(ClipboardMonitorState(Mutex::new(None)))
-        .manage(NcmState::new())
         .setup(|app| {
             tray::create_tray(app)?;
 
             app.manage(AudioState::new(app.handle().clone()));
 
-            // Initialize NCM cookie from disk
+            // Initialize music provider registry
             if let Ok(data_dir) = app.path().app_data_dir() {
-                app.state::<NcmState>().init_data_dir(data_dir);
+                app.manage(ProviderRegistry::new(data_dir));
             }
 
             let monitor = ClipboardMonitor::new(app.handle().clone());
@@ -73,6 +72,9 @@ pub fn run() {
             commands::music::music_personalized,
             commands::music::music_recommend_songs,
             commands::music::music_search_hot,
+            commands::music::music_set_provider,
+            commands::music::music_get_provider,
+            commands::music::music_logout,
         ])
         .run(tauri::generate_context!())
         .expect("error while running TinyBox");

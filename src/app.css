@@ -1,11 +1,12 @@
 @import "tailwindcss";
+@import "./lib/styles/themes.css";
 
 @theme {
   --color-dark-bg: #0e0e18;
   --color-dark-surface: #161625;
   --color-dark-border: rgba(255, 255, 255, 0.08);
-  --color-accent-cyan: #00e5ff;
-  --color-accent-purple: #b388ff;
+  --color-accent-primary: #00e5ff;
+  --color-accent-secondary: #b388ff;
 
   --color-text-primary: rgba(255, 255, 255, 0.92);
   --color-text-secondary: rgba(255, 255, 255, 0.6);
@@ -43,7 +44,7 @@
 
 /* ─── Primary CTA button ─── */
 .glow-button {
-  background: linear-gradient(135deg, var(--color-accent-cyan), var(--color-accent-purple));
+  background: linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary));
   border: none;
   color: #0e0e18;
   font-weight: 600;
@@ -67,8 +68,8 @@
 
 .glow-button:hover {
   box-shadow:
-    0 0 20px rgba(0, 229, 255, 0.35),
-    0 0 40px rgba(179, 136, 255, 0.15),
+    0 0 20px color-mix(in srgb, var(--color-accent-primary) 35%, transparent),
+    0 0 40px color-mix(in srgb, var(--color-accent-secondary) 15%, transparent),
     0 2px 8px rgba(0, 0, 0, 0.3);
   transform: translateY(-1px);
 }
@@ -80,7 +81,7 @@
 .glow-button:active {
   transform: scale(0.95) translateY(0);
   box-shadow:
-    0 0 10px rgba(0, 229, 255, 0.2),
+    0 0 10px color-mix(in srgb, var(--color-accent-primary) 20%, transparent),
     0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
@@ -118,7 +119,7 @@
   position: absolute;
   inset: -2px;
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(0, 229, 255, 0.2), rgba(179, 136, 255, 0.2));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent-primary) 20%, transparent), color-mix(in srgb, var(--color-accent-secondary) 20%, transparent));
   opacity: 0;
   z-index: -1;
   filter: blur(6px);
@@ -140,12 +141,12 @@
 }
 
 .sidebar-icon.active {
-  background: linear-gradient(135deg, rgba(0, 229, 255, 0.1), rgba(179, 136, 255, 0.08));
-  color: var(--color-accent-cyan);
-  border-color: rgba(0, 229, 255, 0.2);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent-primary) 10%, transparent), color-mix(in srgb, var(--color-accent-secondary) 8%, transparent));
+  color: var(--color-accent-primary);
+  border-color: color-mix(in srgb, var(--color-accent-primary) 20%, transparent);
   box-shadow:
-    0 0 12px rgba(0, 229, 255, 0.12),
-    inset 0 0 12px rgba(0, 229, 255, 0.04);
+    0 0 12px color-mix(in srgb, var(--color-accent-primary) 12%, transparent),
+    inset 0 0 12px color-mix(in srgb, var(--color-accent-primary) 4%, transparent);
 }
 
 .sidebar-icon.active::before {
@@ -172,8 +173,8 @@
   inset: 0;
   border-radius: inherit;
   background:
-    radial-gradient(ellipse 60% 50% at var(--gradient-x) var(--gradient-y), rgba(0, 229, 255, 0.04) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 60% at calc(100% - var(--gradient-x)) calc(100% - var(--gradient-y)), rgba(179, 136, 255, 0.03) 0%, transparent 60%);
+    radial-gradient(ellipse 60% 50% at var(--gradient-x) var(--gradient-y), color-mix(in srgb, var(--color-accent-primary) 4%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at calc(100% - var(--gradient-x)) calc(100% - var(--gradient-y)), color-mix(in srgb, var(--color-accent-secondary) 3%, transparent) 0%, transparent 60%);
   pointer-events: none;
   animation: gradient-drift 12s ease-in-out infinite alternate;
 }
@@ -188,9 +189,9 @@
   background: conic-gradient(
     from 0deg at var(--glow-x) 50%,
     transparent 0deg,
-    rgba(0, 229, 255, 0.015) 60deg,
+    color-mix(in srgb, var(--color-accent-primary) 1.5%, transparent) 60deg,
     transparent 120deg,
-    rgba(179, 136, 255, 0.01) 240deg,
+    color-mix(in srgb, var(--color-accent-secondary) 1%, transparent) 240deg,
     transparent 360deg
   );
   pointer-events: none;
@@ -231,7 +232,7 @@
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 229, 255, 0.25);
+  background: color-mix(in srgb, var(--color-accent-primary) 25%, transparent);
 }
 
 * {
@@ -245,7 +246,7 @@ button {
 }
 
 *:focus-visible {
-  outline: 1px solid rgba(0, 229, 255, 0.4);
+  outline: 1px solid color-mix(in srgb, var(--color-accent-primary) 40%, transparent);
   outline-offset: 1px;
 }
 
@@ -260,5 +261,5 @@ textarea {
 input:focus,
 select:focus,
 textarea:focus {
-  box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.2), 0 0 12px rgba(0, 229, 255, 0.06);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent-primary) 20%, transparent), 0 0 12px color-mix(in srgb, var(--color-accent-primary) 6%, transparent);
 }

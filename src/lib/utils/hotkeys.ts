@@ -3,6 +3,7 @@ import { get } from "svelte/store";
 import { settings } from "../stores/settings";
 import { activePanel, expandWindow, collapseWindow, getLastPanel } from "../stores/app";
 import { pauseMusic, resumeMusic, currentView, isPlaying } from "../stores/music";
+import { clipboardQuickOpen } from "../stores/clipboard";
 
 let registered: string[] = [];
 
@@ -15,7 +16,7 @@ export async function registerHotkeys() {
   const s = getSettings();
   const hotkeys: Record<string, () => void> = {
     [s.hotkey_toggle_sidebar]: () => toggleSidebar(),
-    [s.hotkey_clipboard]: () => expandWindow("clipboard"),
+    [s.hotkey_clipboard]: () => openClipboardQuick(),
     [s.hotkey_new_note]: () => expandWindow("notes"),
     [s.hotkey_play_pause]: () => togglePlayPause(),
     [s.hotkey_show_lyrics]: () => showLyrics(),
@@ -41,6 +42,11 @@ async function toggleSidebar() {
   } else {
     await expandWindow(getLastPanel());
   }
+}
+
+async function openClipboardQuick() {
+  await expandWindow("clipboard");
+  clipboardQuickOpen.set(true);
 }
 
 async function togglePlayPause() {

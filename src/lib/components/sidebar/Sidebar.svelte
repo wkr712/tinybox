@@ -8,27 +8,27 @@
   const panels = [
     {
       id: "notes", label: "便签",
-      svg: `<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>`
+      svg: `<path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>`
     },
     {
       id: "todo", label: "待办",
-      svg: `<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><path d="M9 14l2 2 4-4"/>`
+      svg: `<path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>`
     },
     {
       id: "clipboard", label: "剪贴板",
-      svg: `<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>`
+      svg: `<path d="M19 3h-2.18C16.4 1.84 15.3 1 14 1h-4c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>`
     },
     {
       id: "dropzone", label: "文件暂存",
-      svg: `<path d="M20 17v-5a8 8 0 1 0-16 0v5"/><line x1="12" y1="22" x2="12" y2="10"/><polyline points="8 14 12 10 16 14"/>`
+      svg: `<path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>`
     },
     {
       id: "music", label: "音乐",
-      svg: `<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>`
+      svg: `<path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>`
     },
     {
       id: "settings", label: "设置",
-      svg: `<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>`
+      svg: `<path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>`
     },
   ];
 
@@ -163,7 +163,7 @@
             title={panel.label}
             aria-label={panel.label}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
               {@html panel.svg}
             </svg>
           </button>
@@ -182,7 +182,7 @@
             title={panel.label}
             aria-label={panel.label}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
               {@html panel.svg}
             </svg>
           </button>
@@ -262,10 +262,10 @@
     width: 22px;
     height: 2px;
     border-radius: 1px;
-    background: linear-gradient(90deg, var(--color-accent-cyan), var(--color-accent-purple));
+    background: linear-gradient(90deg, var(--color-accent-primary), var(--color-accent-secondary));
     margin-bottom: 10px;
     opacity: 0.6;
-    box-shadow: 0 0 6px rgba(0, 229, 255, 0.15);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--color-accent-primary) 15%, transparent);
   }
 
   .sidebar-icons {
@@ -376,9 +376,9 @@
   }
 
   .island-btn:hover {
-    background: rgba(0, 229, 255, 0.15);
-    color: rgba(0, 229, 255, 0.9);
-    box-shadow: 0 0 8px rgba(0, 229, 255, 0.15);
+    background: color-mix(in srgb, var(--color-accent-primary) 15%, transparent);
+    color: color-mix(in srgb, var(--color-accent-primary) 90%, transparent);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--color-accent-primary) 15%, transparent);
   }
 
   .island-btn:active {
@@ -423,8 +423,8 @@
   }
 
   .island-restore:hover {
-    color: rgba(0, 229, 255, 0.8);
-    background: rgba(0, 229, 255, 0.06);
+    color: color-mix(in srgb, var(--color-accent-primary) 80%, transparent);
+    background: color-mix(in srgb, var(--color-accent-primary) 6%, transparent);
   }
 
   .island-restore:active {
@@ -444,15 +444,15 @@
     border-radius: 12px;
     overflow: hidden;
     flex-shrink: 0;
-    border: 1px solid rgba(0, 229, 255, 0.15);
-    box-shadow: 0 0 10px rgba(0, 229, 255, 0.08);
+    border: 1px solid color-mix(in srgb, var(--color-accent-primary) 15%, transparent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--color-accent-primary) 8%, transparent);
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
   .mini-player:hover {
-    border-color: rgba(0, 229, 255, 0.35);
-    box-shadow: 0 0 16px rgba(0, 229, 255, 0.2);
+    border-color: color-mix(in srgb, var(--color-accent-primary) 35%, transparent);
+    box-shadow: 0 0 16px color-mix(in srgb, var(--color-accent-primary) 20%, transparent);
     transform: scale(1.05);
   }
 

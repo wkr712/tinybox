@@ -77,9 +77,52 @@
     await saveSetting(key, String(clamped));
     applySettings({ ...s, [key]: String(clamped) });
   }
+
+  async function exportData() {
+    try {
+      const { select } = await import("../../../utils/db");
+      const { copyToClipboard } = await import("../../../stores/clipboard");
+      const notes = await select("SELECT * FROM notes");
+      const todos = await select("SELECT * FROM todos");
+      const settingsRows = await select("SELECT * FROM settings");
+      const data = JSON.stringify({ notes, todos, settings: settingsRows, exportedAt: new Date().toISOString() }, null, 2);
+      await copyToClipboard(data);
+    } catch (e) {
+      console.error("Export failed:", e);
+    }
+  }
 </script>
 
 <div class="h-full flex flex-col gap-4 overflow-y-auto">
+  <!-- Appearance -->
+  <section>
+    <div class="text-[10px] text-white/20 mb-2 px-1">外观</div>
+    <div class="px-3 py-2">
+      <div class="text-xs text-white/60 mb-2">主题</div>
+      <div class="flex items-center gap-3">
+        {#each [
+          { id: "midnight", label: "深夜", color: "#00e5ff" },
+          { id: "ocean", label: "海洋", color: "#4fc3f7" },
+          { id: "rose", label: "玫瑰", color: "#f48fb1" },
+          { id: "forest", label: "森林", color: "#81c784" },
+          { id: "light", label: "明亮", color: "#0288d1" },
+        ] as t (t.id)}
+          <button
+            onclick={() => saveSetting('theme', t.id)}
+            class="flex flex-col items-center gap-1 group"
+            title={t.label}
+          >
+            <div
+              class="w-6 h-6 rounded-full transition-all {s.theme === t.id ? 'ring-2 ring-offset-1 ring-offset-dark-bg scale-110' : 'ring-1 ring-white/10 hover:scale-105'}"
+              style="background: {t.color}; {s.theme === t.id ? 'ring-color: ' + t.color : ''}"
+            ></div>
+            <span class="text-[9px] {s.theme === t.id ? 'text-white/60' : 'text-white/20'} transition-colors">{t.label}</span>
+          </button>
+        {/each}
+      </div>
+    </div>
+  </section>
+
   <!-- Window -->
   <section>
     <div class="text-[10px] text-white/20 mb-2 px-1">窗口</div>
@@ -89,7 +132,7 @@
         class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/[0.03] active:scale-[0.99] transition-all"
       >
         <span class="text-xs text-white/60">窗口置顶</span>
-        <span class="text-[10px] {s.always_on_top === 'true' ? 'text-accent-cyan' : 'text-white/20'}">
+        <span class="text-[10px] {s.always_on_top === 'true' ? 'text-accent-primary' : 'text-white/20'}">
           {s.always_on_top === "true" ? "开" : "关"}
         </span>
       </button>
@@ -105,7 +148,7 @@
         class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/[0.03] active:scale-[0.99] transition-all"
       >
         <span class="text-xs text-white/60">剪贴板监听</span>
-        <span class="text-[10px] {s.clipboard_monitor_enabled === 'true' ? 'text-accent-cyan' : 'text-white/20'}">
+        <span class="text-[10px] {s.clipboard_monitor_enabled === 'true' ? 'text-accent-primary' : 'text-white/20'}">
           {s.clipboard_monitor_enabled === "true" ? "开" : "关"}
         </span>
       </button>
@@ -115,7 +158,7 @@
           type="number"
           value={s.clipboard_max_history}
           onchange={(e) => saveNumberSetting('clipboard_max_history', (e.target as HTMLInputElement).value, 10, 1000)}
-          class="w-16 bg-white/[0.05] text-[11px] text-white/60 px-2 py-0.5 rounded text-right outline-none focus:ring-1 focus:ring-accent-cyan/30"
+          class="w-16 bg-white/[0.05] text-[11px] text-white/60 px-2 py-0.5 rounded text-right outline-none focus:ring-1 focus:ring-accent-primary/30"
         />
       </div>
     </div>
@@ -131,7 +174,7 @@
           type="number"
           value={s.pomodoro_work_duration}
           onchange={(e) => saveNumberSetting('pomodoro_work_duration', (e.target as HTMLInputElement).value, 1, 120)}
-          class="w-16 bg-white/[0.05] text-[11px] text-white/60 px-2 py-0.5 rounded text-right outline-none focus:ring-1 focus:ring-accent-cyan/30"
+          class="w-16 bg-white/[0.05] text-[11px] text-white/60 px-2 py-0.5 rounded text-right outline-none focus:ring-1 focus:ring-accent-primary/30"
         />
       </div>
       <div class="flex items-center justify-between px-3 py-2">
@@ -140,7 +183,7 @@
           type="number"
           value={s.pomodoro_break_duration}
           onchange={(e) => saveNumberSetting('pomodoro_break_duration', (e.target as HTMLInputElement).value, 1, 60)}
-          class="w-16 bg-white/[0.05] text-[11px] text-white/60 px-2 py-0.5 rounded text-right outline-none focus:ring-1 focus:ring-accent-cyan/30"
+          class="w-16 bg-white/[0.05] text-[11px] text-white/60 px-2 py-0.5 rounded text-right outline-none focus:ring-1 focus:ring-accent-primary/30"
         />
       </div>
     </div>
@@ -158,7 +201,7 @@
           max="100"
           value={s.music_volume || 80}
           onchange={(e) => saveNumberSetting('music_volume', (e.target as HTMLInputElement).value)}
-          class="w-20 accent-accent-cyan [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-accent-cyan [&::-webkit-slider-runnable-track]:h-0.5 [&::-webkit-slider-runnable-track]:bg-white/10 [&::-webkit-slider-runnable-track]:rounded-full"
+          class="w-20 accent-accent-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-accent-primary [&::-webkit-slider-runnable-track]:h-0.5 [&::-webkit-slider-runnable-track]:bg-white/10 [&::-webkit-slider-runnable-track]:rounded-full"
         />
         <span class="text-[10px] text-white/40 w-6 text-right">{s.music_volume || 80}%</span>
       </div>
@@ -183,10 +226,10 @@
               type="text"
               bind:value={editValue}
               onkeydown={handleKeydown}
-              class="w-32 bg-accent-cyan/10 text-[10px] text-accent-cyan px-2 py-0.5 rounded outline-none"
+              class="w-32 bg-accent-primary/10 text-[10px] text-accent-primary px-2 py-0.5 rounded outline-none"
               placeholder="按键..."
             />
-            <button onclick={() => saveEdit(item.key)} class="ml-1 text-[10px] text-accent-cyan hover:underline active:scale-90 transition-transform">确定</button>
+            <button onclick={() => saveEdit(item.key)} class="ml-1 text-[10px] text-accent-primary hover:underline active:scale-90 transition-transform">确定</button>
             <button onclick={cancelEdit} class="ml-1 text-[10px] text-white/20 hover:text-white/40 active:scale-90 transition-transform">取消</button>
           {:else}
             <div class="flex items-center gap-1">
@@ -203,6 +246,15 @@
 
   <!-- About -->
   <section class="pt-2 border-t border-white/5">
+    <div class="space-y-1">
+      <button
+        onclick={exportData}
+        class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/[0.03] active:scale-[0.99] transition-all"
+      >
+        <span class="text-xs text-white/60">导出数据</span>
+        <svg class="w-3 h-3 text-white/20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button>
+    </div>
     <div class="text-center py-2">
       <div class="text-[10px] text-white/15">TinyBox v{version}</div>
       <div class="text-[9px] text-white/10 mt-0.5">Tauri 2 + Svelte 5 + SQLite</div>

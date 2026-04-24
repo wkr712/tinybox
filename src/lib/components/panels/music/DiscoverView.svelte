@@ -52,7 +52,7 @@
         {#each hot.slice(0, 10) as h, i (h.search_word)}
           <button
             onclick={() => handleHotSearch(h.search_word)}
-            class="px-2 py-0.5 rounded-full bg-white/[0.04] text-[10px] text-white/40 hover:bg-accent-cyan/10 hover:text-accent-cyan active:scale-95 transition-all"
+            class="px-2 py-0.5 rounded-full bg-white/[0.04] text-[10px] text-white/40 hover:bg-accent-primary/10 hover:text-accent-primary active:scale-95 transition-all"
           >
             <span class="text-white/15 mr-1">{i + 1}</span>{h.search_word}
           </button>

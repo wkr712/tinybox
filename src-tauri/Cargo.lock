@@ -6073,9 +6073,12 @@ dependencies = [
 
 [[package]]
 name = "tinybox"
-version = "1.1.0"
+version = "2.0.0"
 dependencies = [
  "arboard",
+ "async-trait",
+ "base64 0.22.1",
+ "md-5",
  "ncm-api-rs",
  "reqwest 0.12.28",
  "rodio",

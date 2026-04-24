@@ -1,6 +1,6 @@
 [package]
 name = "tinybox"
-version = "1.1.0"
+version = "2.0.0"
 edition = "2021"
 
 [lib]
@@ -25,3 +25,6 @@ ncm-api-rs = "0.1"
 rodio = "0.19"
 reqwest = { version = "0.12", features = ["blocking"] }
 tokio = { version = "1", features = ["full"] }
+async-trait = "0.1"
+md-5 = "0.10"
+base64 = "0.22"

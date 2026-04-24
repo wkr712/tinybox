@@ -6,6 +6,7 @@ import type { ClipboardItem } from "../types/clipboard";
 import { getSetting } from "./settings";
 
 export const clipboardHistory = writable<ClipboardItem[]>([]);
+export const clipboardQuickOpen = writable<boolean>(false);
 export let maxHistory = 100;
 
 export function setMaxHistory(val: number) {

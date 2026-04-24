@@ -50,11 +50,11 @@
     {#each list as track, i (track.id)}
       <button
         onclick={() => handlePlay(track)}
-        class="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg active:scale-[0.99] transition-all text-left {song?.id === track.id ? 'bg-accent-cyan/10' : 'hover:bg-white/[0.03]'}"
+        class="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg active:scale-[0.99] transition-all text-left {song?.id === track.id ? 'bg-accent-primary/10' : 'hover:bg-white/[0.03]'}"
       >
         <span class="text-[10px] text-white/15 w-5 text-right shrink-0">{i + 1}</span>
         <div class="flex-1 min-w-0">
-          <div class="text-xs {song?.id === track.id ? 'text-accent-cyan' : 'text-white/75'} truncate">{track.name}</div>
+          <div class="text-xs {song?.id === track.id ? 'text-accent-primary' : 'text-white/75'} truncate">{track.name}</div>
           <div class="text-[10px] text-white/25 truncate">{track.artists}</div>
         </div>
         <span class="text-[10px] text-white/15 shrink-0">{formatDuration(track.duration)}</span>
@@ -72,7 +72,7 @@
         </div>
         <div class="shrink-0">
           {#if playing}
-            <svg class="w-4 h-4 text-accent-cyan" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            <svg class="w-4 h-4 text-accent-primary" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
           {:else}
             <svg class="w-4 h-4 text-white/40" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           {/if}

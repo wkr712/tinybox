@@ -2,6 +2,7 @@
   import { editingNoteId, deleteNote, togglePin } from "../../../stores/notes";
   import type { Note } from "../../../types/note";
   import { pressEffect } from "../../../utils/pressEffect";
+  import { ask } from "@tauri-apps/plugin-dialog";
 
   let { note }: { note: Note } = $props();
 
@@ -12,10 +13,9 @@
     editingNoteId.set(note.id);
   }
 
-  function confirmDelete() {
-    if (confirm("删除这条便签？")) {
-      deleteNote(note.id);
-    }
+  async function confirmDelete() {
+    const yes = await ask("删除这条便签？", { title: "确认删除", kind: "warning", okLabel: "删除", cancelLabel: "取消" });
+    if (yes) deleteNote(note.id);
   }
 
   let displayTitle = $derived(note.title || note.content.split("\n")[0]?.slice(0, 40) || "空便签");
@@ -51,7 +51,7 @@
 >
   {#if note.pinned && !showActions}
     <div class="absolute top-1.5 right-1.5 pin-icon {pinAnimating ? 'pin-drop' : ''}">
-      <svg class="w-3 h-3 text-accent-cyan/60" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+      <svg class="w-3 h-3 text-accent-primary/60" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
         <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
       </svg>
     </div>
@@ -72,7 +72,7 @@
         title={note.pinned ? "取消置顶" : "置顶"}
         use:pressEffect={{ scale: 0.85 }}
       >
-        <svg class="w-3 h-3 pin-icon {pinAnimating ? 'pin-drop' : ''}" style="color: {note.pinned ? 'var(--color-accent-cyan)' : 'rgba(255,255,255,0.5)'}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <svg class="w-3 h-3 pin-icon {pinAnimating ? 'pin-drop' : ''}" style="color: {note.pinned ? 'var(--color-accent-primary)' : 'rgba(255,255,255,0.5)'}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
           <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
         </svg>
       </button>

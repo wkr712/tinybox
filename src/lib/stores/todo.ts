@@ -1,6 +1,7 @@
 import { writable, get } from "svelte/store";
 import { select, execute } from "../utils/db";
 import type { Todo, PomodoroPhase, TimerState } from "../types/todo";
+import { sendNotification, isPermissionGranted, requestPermission } from "@tauri-apps/plugin-notification";
 
 // Todos
 export const todos = writable<Todo[]>([]);
@@ -93,16 +94,33 @@ export async function completePhase() {
   if (phase === "work") {
     count++;
     pomodoroCount.set(count);
+    notifyPomodoro("工作阶段完成，休息一下！");
     if (count % 4 === 0) {
       setPhase("long_break");
     } else {
       setPhase("break");
     }
   } else {
+    notifyPomodoro("休息结束，继续加油！");
     setPhase("work");
   }
 
   await loadTodaySessions();
+}
+
+async function notifyPomodoro(body: string) {
+  try {
+    let permitted = await isPermissionGranted();
+    if (!permitted) {
+      const permission = await requestPermission();
+      permitted = permission === "granted";
+    }
+    if (permitted) {
+      sendNotification({ title: "TinyBox 番茄钟", body });
+    }
+  } catch {
+    // notification plugin not available
+  }
 }
 
 export async function loadTodaySessions() {

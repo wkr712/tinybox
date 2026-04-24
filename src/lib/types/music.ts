@@ -1,5 +1,5 @@
-export interface NcmSong {
-  id: number;
+export interface Song {
+  id: string;
   name: string;
   artists: string;
   album: string;
@@ -8,7 +8,7 @@ export interface NcmSong {
   pic_url: string;
 }
 
-export interface NcmPlaylist {
+export interface Playlist {
   id: number;
   name: string;
   cover_img_url: string;
@@ -16,7 +16,7 @@ export interface NcmPlaylist {
   creator: string;
 }
 
-export interface NcmUser {
+export interface MusicUser {
   user_id: number;
   nickname: string;
   avatar_url: string;
@@ -28,6 +28,8 @@ export interface LyricLine {
 }
 
 export type MusicView = "login" | "playlists" | "tracks" | "search" | "nowplaying" | "discover";
+
+export type MusicProviderKind = "ncm" | "qqmusic" | "kugou";
 
 export interface HotSearch {
   search_word: string;

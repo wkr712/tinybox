@@ -1,24 +1,24 @@
 import { writable, get } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import type { NcmSong, NcmPlaylist, NcmUser, LyricLine, MusicView, HotSearch } from "../types/music";
+import type { Song, Playlist, MusicUser, LyricLine, MusicView, MusicProviderKind, HotSearch } from "../types/music";
 
-export const user = writable<NcmUser | null>(null);
-export const playlists = writable<NcmPlaylist[]>([]);
-export const currentPlaylist = writable<NcmPlaylist | null>(null);
-export const tracks = writable<NcmSong[]>([]);
-export const currentSong = writable<NcmSong | null>(null);
+export const activeProvider = writable<MusicProviderKind>("ncm");
+export const user = writable<MusicUser | null>(null);
+export const playlists = writable<Playlist[]>([]);
+export const currentPlaylist = writable<Playlist | null>(null);
+export const tracks = writable<Song[]>([]);
+export const currentSong = writable<Song | null>(null);
 export const lyrics = writable<LyricLine[]>([]);
 export const isPlaying = writable(false);
 export const currentView = writable<MusicView>("login");
 export const previousView = writable<MusicView>("playlists");
-export const searchResults = writable<NcmSong[]>([]);
+export const searchResults = writable<Song[]>([]);
 export const volume = writable(0.8);
 
-// v0.7.0 additions
-export const playProgress = writable(0); // seconds elapsed
-export const recommendPlaylists = writable<NcmPlaylist[]>([]);
-export const recommendSongs = writable<NcmSong[]>([]);
+export const playProgress = writable(0);
+export const recommendPlaylists = writable<Playlist[]>([]);
+export const recommendSongs = writable<Song[]>([]);
 export const hotSearches = writable<HotSearch[]>([]);
 
 let progressTimer: ReturnType<typeof setInterval> | null = null;
@@ -29,57 +29,91 @@ export async function generateQr() {
 
 export async function checkQr(key: string) {
   const result = await invoke<Record<string, any>>("music_qr_check", { key });
-  return (result.code ?? result.data?.code ?? 800) as number;
+  const provider = get(activeProvider);
+  if (provider === "ncm") {
+    return (result.code ?? 800) as number;
+  } else if (provider === "qqmusic") {
+    // QQ Music: check status field
+    const status = result["music.client.QRCodeLogin.Server"]?.["data"]?.["status"] ?? 0;
+    if (status === 0) return 800;   // expired
+    if (status === 1) return 802;   // scanned
+    if (status === 2) return 803;   // confirmed
+    return 800;
+  } else {
+    // Kugou: 1=waiting, 2=scanned, 3=confirmed
+    const status = result["data"]?.["status"] ?? 0;
+    if (status === 1) return 801;
+    if (status === 2) return 802;
+    if (status === 3) return 803;
+    return 800;
+  }
 }
 
 export async function fetchLoginStatus() {
   const resp = await invoke<Record<string, any>>("music_login_status");
-  if (resp.code === 200 && resp.account) {
-    const profile = resp.profile || {};
-    user.set({
-      user_id: profile.userId || 0,
-      nickname: profile.nickname || "",
-      avatar_url: profile.avatarUrl || "",
-    });
-    return true;
+  const provider = get(activeProvider);
+  if (provider === "ncm") {
+    if (resp.code === 200 && resp.account) {
+      const profile = resp.profile || {};
+      user.set({
+        user_id: profile.userId || resp.account?.id || 0,
+        nickname: profile.nickname || resp.account?.userName || "",
+        avatar_url: profile.avatarUrl || resp.account?.avatar || "",
+      });
+      return true;
+    }
+  } else {
+    // QQ Music / Kugou: unified format from login_status
+    if (resp.code === 200 && resp.account) {
+      user.set({
+        user_id: resp.account.id || 0,
+        nickname: resp.account.userName || "",
+        avatar_url: resp.account.avatar || "",
+      });
+      return true;
+    }
   }
   return false;
 }
 
 export async function fetchUserPlaylists(uid: number) {
   const resp = await invoke<Record<string, any>>("music_user_playlist", { uid });
-  if (resp.playlist) {
-    playlists.set(
-      resp.playlist.map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        cover_img_url: p.coverImgUrl || "",
-        track_count: p.trackCount || 0,
-        creator: p.creator?.nickname || "",
-      }))
-    );
-  }
-}
-
-export async function fetchPlaylistTracks(id: number) {
-  const resp = await invoke<Record<string, any>>("music_playlist_detail", { id });
-  const songs = resp.playlist?.tracks || [];
-  tracks.set(
-    songs.map((s: any) => ({
-      id: s.id,
-      name: s.name,
-      artists: (s.ar || []).map((a: any) => a.name).join(" / "),
-      album: s.al?.name || "",
-      album_id: s.al?.id || 0,
-      duration: s.dt || 0,
-      pic_url: s.al?.picUrl || "",
+  const provider = get(activeProvider);
+  const rawList = resp.playlist || [];
+  playlists.set(
+    rawList.map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      cover_img_url: p.coverImgUrl || p.cover_img_url || "",
+      track_count: p.trackCount || p.track_count || 0,
+      creator: p.creator?.nickname || p.creator || "",
     }))
   );
 }
 
-export async function playSong(song: NcmSong) {
-  const resp = await invoke<Record<string, any>>("music_song_url", { id: song.id });
-  const url = resp.data?.[0]?.url;
+export async function fetchPlaylistTracks(id: number) {
+  const resp = await invoke<Record<string, any>>("music_playlist_detail", { id });
+  const provider = get(activeProvider);
+  const songs = resp.playlist?.tracks || resp.songs || [];
+  tracks.set(
+    songs.map((s: any) => parseSong(s, provider))
+  );
+}
+
+function parseSong(s: any, _provider: MusicProviderKind): Song {
+  return {
+    id: String(s.id ?? s.songmid ?? ""),
+    name: s.name || s.songname || "",
+    artists: s.artists || (s.ar || s.singer || []).map((a: any) => a.name || a).join(" / "),
+    album: s.album || s.al?.name || s.albumname || "",
+    album_id: s.album_id || s.al?.id || 0,
+    duration: s.duration || s.dt || 0,
+    pic_url: s.pic_url || s.al?.picUrl || "",
+  };
+}
+
+export async function playSong(song: Song) {
+  const url = await invoke<string>("music_song_url", { id: String(song.id) });
   if (!url) return false;
 
   await invoke("music_play", { url });
@@ -91,7 +125,7 @@ export async function playSong(song: NcmSong) {
   return true;
 }
 
-export async function fetchLyrics(id: number) {
+export async function fetchLyrics(id: string) {
   const resp = await invoke<Record<string, any>>("music_lyric", { id });
   const lrcText = resp.lrc?.lyric || "";
   lyrics.set(parseLrc(lrcText));
@@ -99,17 +133,10 @@ export async function fetchLyrics(id: number) {
 
 export async function searchSongs(keywords: string) {
   const resp = await invoke<Record<string, any>>("music_search", { keywords });
+  const provider = get(activeProvider);
   const songs = resp.result?.songs || [];
   searchResults.set(
-    songs.map((s: any) => ({
-      id: s.id,
-      name: s.name,
-      artists: (s.ar || []).map((a: any) => a.name).join(" / "),
-      album: s.al?.name || "",
-      album_id: s.al?.id || 0,
-      duration: s.dt || 0,
-      pic_url: s.al?.picUrl || "",
-    }))
+    songs.map((s: any) => parseSong(s, provider))
   );
 }
 
@@ -140,7 +167,6 @@ export async function seekTo(positionSeconds: number) {
   playProgress.set(positionSeconds);
 }
 
-// v0.7.0: Recommendations
 export async function fetchRecommendPlaylists() {
   const resp = await invoke<Record<string, any>>("music_personalized", { limit: 12 });
   if (resp.result) {
@@ -148,9 +174,9 @@ export async function fetchRecommendPlaylists() {
       resp.result.map((p: any) => ({
         id: p.id,
         name: p.name,
-        cover_img_url: p.picUrl || "",
-        track_count: p.trackCount || 0,
-        creator: p.copywriter || "",
+        cover_img_url: p.picUrl || p.cover_img_url || "",
+        track_count: p.trackCount || p.track_count || 0,
+        creator: p.copywriter || p.creator || "",
       }))
     );
   }
@@ -158,36 +184,59 @@ export async function fetchRecommendPlaylists() {
 
 export async function fetchRecommendSongs() {
   const resp = await invoke<Record<string, any>>("music_recommend_songs");
-  const songs = resp.data?.dailySongs || resp.data || [];
+  const provider = get(activeProvider);
+  const songs = resp.data?.dailySongs || resp.data?.daily_songs || resp.data || [];
   if (Array.isArray(songs)) {
     recommendSongs.set(
-      songs.slice(0, 20).map((s: any) => ({
-        id: s.id,
-        name: s.name,
-        artists: (s.ar || []).map((a: any) => a.name).join(" / "),
-        album: s.al?.name || "",
-        album_id: s.al?.id || 0,
-        duration: s.dt || 0,
-        pic_url: s.al?.picUrl || "",
-      }))
+      songs.slice(0, 20).map((s: any) => parseSong(s, provider))
     );
   }
 }
 
 export async function fetchHotSearches() {
   const resp = await invoke<Record<string, any>>("music_search_hot");
-  if (resp.data) {
-    hotSearches.set(
-      resp.data.map((h: any) => ({
-        search_word: h.searchWord || "",
-        score: h.score || 0,
-        content: h.content || "",
-      }))
-    );
-  }
+  const hotList = resp.result?.hots || resp.data || [];
+  hotSearches.set(
+    hotList.map((h: any) => ({
+      search_word: h.searchWord || h.search_word || "",
+      score: h.score || 0,
+      content: h.content || "",
+    }))
+  );
 }
 
-// Listen for audio state changes from Rust backend
+export async function switchProvider(provider: MusicProviderKind) {
+  await invoke("music_set_provider", { provider });
+  activeProvider.set(provider);
+  // Reset state
+  user.set(null);
+  playlists.set([]);
+  tracks.set([]);
+  currentSong.set(null);
+  lyrics.set([]);
+  searchResults.set([]);
+  recommendPlaylists.set([]);
+  recommendSongs.set([]);
+  hotSearches.set([]);
+  currentView.set("login");
+}
+
+export async function getActiveProviderKind(): Promise<MusicProviderKind> {
+  const kind = await invoke<string>("music_get_provider");
+  activeProvider.set(kind as MusicProviderKind);
+  return kind as MusicProviderKind;
+}
+
+export async function logout() {
+  await invoke("music_logout");
+  user.set(null);
+  playlists.set([]);
+  tracks.set([]);
+  currentSong.set(null);
+  lyrics.set([]);
+  currentView.set("login");
+}
+
 let _audioUnlisten: (() => void) | null = null;
 
 export async function initAudioListener() {
@@ -217,7 +266,6 @@ export function destroyAudioListener() {
   }
 }
 
-// Progress tracking
 function startProgressTimer() {
   stopProgressTimer();
   progressTimer = setInterval(() => {

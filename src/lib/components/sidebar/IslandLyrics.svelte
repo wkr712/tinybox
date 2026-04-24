@@ -71,7 +71,7 @@
   }
 
   .island-lyric-line.active {
-    color: var(--color-accent-cyan, #00e5ff);
+    color: var(--color-accent-primary, #00e5ff);
     font-weight: 500;
   }
 </style>

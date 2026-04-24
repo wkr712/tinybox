@@ -3,6 +3,7 @@
   import { editingNoteId, updateNote, deleteNote, togglePin } from "../../../stores/notes";
   import { NOTE_COLORS } from "../../../types/note";
   import type { Note } from "../../../types/note";
+  import { ask } from "@tauri-apps/plugin-dialog";
 
   let { note }: { note: Note } = $props();
 
@@ -53,10 +54,9 @@
     togglePin(lastNoteId, note.pinned);
   }
 
-  function confirmDelete() {
-    if (confirm("删除这条便签？")) {
-      deleteNote(lastNoteId);
-    }
+  async function confirmDelete() {
+    const yes = await ask("删除这条便签？", { title: "确认删除", kind: "warning", okLabel: "删除", cancelLabel: "取消" });
+    if (yes) deleteNote(lastNoteId);
   }
 </script>
 
@@ -82,7 +82,7 @@
         class="w-5 h-5 rounded flex items-center justify-center hover:bg-white/10 transition-colors"
         title={note.pinned ? "取消置顶" : "置顶"}
       >
-        <svg class="w-3 h-3" style="color: {note.pinned ? 'var(--color-accent-cyan)' : 'rgba(255,255,255,0.4)'}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <svg class="w-3 h-3" style="color: {note.pinned ? 'var(--color-accent-primary)' : 'rgba(255,255,255,0.4)'}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
           <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
         </svg>
       </button>
@@ -113,7 +113,7 @@
       {#each NOTE_COLORS as color}
         <button
           onclick={() => changeColor(color)}
-          class="w-4 h-4 rounded-full border transition-transform hover:scale-125 {note.color === color ? 'border-accent-cyan ring-1 ring-accent-cyan/50' : 'border-white/20'}"
+          class="w-4 h-4 rounded-full border transition-transform hover:scale-125 {note.color === color ? 'border-accent-primary ring-1 ring-accent-primary/50' : 'border-white/20'}"
           style="background: {color}"
           title="选择颜色"
           aria-label="选择颜色 {color}"

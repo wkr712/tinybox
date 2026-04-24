@@ -1,15 +1,24 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { generateQr, checkQr, fetchLoginStatus, fetchUserPlaylists, currentView, user } from "../../../stores/music";
+  import { generateQr, checkQr, fetchLoginStatus, fetchUserPlaylists, currentView, user, activeProvider } from "../../../stores/music";
   import { get } from "svelte/store";
+  import type { MusicProviderKind } from "../../../types/music";
 
   let qrUrl = $state("");
   let qrKey = $state("");
   let status = $state<"loading" | "waiting" | "scanned" | "expired" | "error">("loading");
   let pollTimer: ReturnType<typeof setInterval> | null = null;
   let expiryTimer: ReturnType<typeof setTimeout> | null = null;
+  let provider = $state<MusicProviderKind>("ncm");
+
+  const providerLabels: Record<MusicProviderKind, { name: string; hint: string }> = {
+    ncm: { name: "网易云音乐", hint: "打开网易云音乐APP扫码登录" },
+    qqmusic: { name: "QQ音乐", hint: "打开QQ音乐APP扫码登录" },
+    kugou: { name: "酷狗音乐", hint: "打开酷狗音乐APP扫码登录" },
+  };
 
   onMount(() => {
+    provider = get(activeProvider);
     startQr();
   });
 
@@ -69,7 +78,7 @@
 </script>
 
 <div class="flex flex-col items-center gap-4 py-6">
-  <div class="text-white/40 text-xs mb-2">扫码登录网易云音乐</div>
+  <div class="text-white/40 text-xs mb-2">扫码登录{providerLabels[provider].name}</div>
 
   {#if status === "loading"}
     <div class="w-40 h-40 bg-white/5 rounded-xl flex items-center justify-center">
@@ -79,24 +88,24 @@
     <div class="w-40 h-40 bg-white/5 rounded-xl flex items-center justify-center">
       <div class="text-red-400/60 text-sm">加载失败</div>
     </div>
-    <button onclick={startQr} class="text-accent-cyan text-xs hover:underline">重试</button>
+    <button onclick={startQr} class="text-accent-primary text-xs hover:underline">重试</button>
   {:else}
     <div class="w-40 h-40 bg-white rounded-xl p-2 relative">
       <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={encodeURIComponent(qrUrl)}" alt="QR" class="w-full h-full" />
       {#if status === "scanned"}
         <div class="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center">
-          <span class="text-accent-cyan text-sm">已扫码，确认中...</span>
+          <span class="text-accent-primary text-sm">已扫码，确认中...</span>
         </div>
       {/if}
     </div>
   {/if}
 
   {#if status === "waiting"}
-    <div class="text-white/30 text-[10px]">打开网易云音乐APP扫码登录</div>
+    <div class="text-white/30 text-[10px]">{providerLabels[provider].hint}</div>
   {:else if status === "expired"}
     <div class="text-white/30 text-[10px]">二维码已过期</div>
-    <button onclick={startQr} class="text-accent-cyan text-xs hover:underline">刷新二维码</button>
+    <button onclick={startQr} class="text-accent-primary text-xs hover:underline">刷新二维码</button>
   {:else if status === "scanned"}
-    <div class="text-accent-cyan text-[10px]">请在手机上确认登录</div>
+    <div class="text-accent-primary text-[10px]">请在手机上确认登录</div>
   {/if}
 </div>

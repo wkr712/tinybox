@@ -1,5 +1,5 @@
 use crate::services::audio_player::{AudioPlayer, AudioState};
-use crate::services::ncm::{NcmService, NcmState};
+use crate::services::music_provider::ProviderRegistry;
 use serde::Serialize;
 use std::time::Duration;
 use tauri::State;
@@ -11,78 +11,85 @@ pub struct QrResult {
 }
 
 #[tauri::command]
-pub async fn music_qr_generate(state: State<'_, NcmState>) -> Result<QrResult, String> {
-    let key_body = NcmService::qr_key(&state).await?;
-    let key = key_body["unikey"]
-        .as_str()
-        .ok_or("Failed to get QR key")?
-        .to_string();
-
-    let qr_body = NcmService::qr_create(&state, &key).await?;
-    let qrurl = qr_body["data"]["qrurl"]
-        .as_str()
-        .ok_or("Failed to get QR url")?
-        .to_string();
-
+pub async fn music_qr_generate(
+    registry: State<'_, ProviderRegistry>,
+) -> Result<QrResult, String> {
+    let provider = registry.active_provider()?;
+    let (key, qrurl) = provider.qr_generate().await?;
     Ok(QrResult { key, qrurl })
 }
 
 #[tauri::command]
 pub async fn music_qr_check(
-    state: State<'_, NcmState>,
+    registry: State<'_, ProviderRegistry>,
     key: String,
 ) -> Result<serde_json::Value, String> {
-    NcmService::qr_check(&state, &key).await
+    let provider = registry.active_provider()?;
+    provider.qr_check(&key).await
 }
 
 #[tauri::command]
-pub async fn music_login_status(state: State<'_, NcmState>) -> Result<serde_json::Value, String> {
-    NcmService::login_status(&state).await
+pub async fn music_login_status(
+    registry: State<'_, ProviderRegistry>,
+) -> Result<serde_json::Value, String> {
+    let provider = registry.active_provider()?;
+    provider.login_status().await
 }
 
 #[tauri::command]
 pub async fn music_user_playlist(
-    state: State<'_, NcmState>,
+    registry: State<'_, ProviderRegistry>,
     uid: i64,
 ) -> Result<serde_json::Value, String> {
-    NcmService::user_playlist(&state, uid).await
+    let provider = registry.active_provider()?;
+    provider.user_playlists(uid).await
 }
 
 #[tauri::command]
 pub async fn music_playlist_detail(
-    state: State<'_, NcmState>,
+    registry: State<'_, ProviderRegistry>,
     id: i64,
 ) -> Result<serde_json::Value, String> {
-    NcmService::playlist_detail(&state, id).await
+    let provider = registry.active_provider()?;
+    provider.playlist_detail(id).await
 }
 
 #[tauri::command]
 pub async fn music_song_url(
-    state: State<'_, NcmState>,
-    id: i64,
-) -> Result<serde_json::Value, String> {
-    NcmService::song_url(&state, id).await
+    registry: State<'_, ProviderRegistry>,
+    id: String,
+) -> Result<String, String> {
+    let provider = registry.active_provider()?;
+    provider.song_url(&id).await
 }
 
 #[tauri::command]
 pub async fn music_song_detail(
-    state: State<'_, NcmState>,
+    registry: State<'_, ProviderRegistry>,
     ids: String,
 ) -> Result<serde_json::Value, String> {
-    NcmService::song_detail(&state, &ids).await
+    // Return song detail via search or cached data
+    let provider = registry.active_provider()?;
+    let first_id = ids.split(',').next().unwrap_or("");
+    provider.search(first_id, 1).await
 }
 
 #[tauri::command]
-pub async fn music_lyric(state: State<'_, NcmState>, id: i64) -> Result<serde_json::Value, String> {
-    NcmService::lyric(&state, id).await
+pub async fn music_lyric(
+    registry: State<'_, ProviderRegistry>,
+    id: String,
+) -> Result<serde_json::Value, String> {
+    let provider = registry.active_provider()?;
+    provider.lyric(&id).await
 }
 
 #[tauri::command]
 pub async fn music_search(
-    state: State<'_, NcmState>,
+    registry: State<'_, ProviderRegistry>,
     keywords: String,
 ) -> Result<serde_json::Value, String> {
-    NcmService::search(&state, &keywords).await
+    let provider = registry.active_provider()?;
+    provider.search(&keywords, 30).await
 }
 
 #[tauri::command]
@@ -117,20 +124,48 @@ pub fn music_seek(state: State<'_, AudioState>, position_ms: u64) -> Result<(), 
 
 #[tauri::command]
 pub async fn music_personalized(
-    state: State<'_, NcmState>,
+    registry: State<'_, ProviderRegistry>,
     limit: i64,
 ) -> Result<serde_json::Value, String> {
-    NcmService::personalized(&state, limit).await
+    let provider = registry.active_provider()?;
+    provider.personalized(limit).await
 }
 
 #[tauri::command]
 pub async fn music_recommend_songs(
-    state: State<'_, NcmState>,
+    registry: State<'_, ProviderRegistry>,
 ) -> Result<serde_json::Value, String> {
-    NcmService::recommend_songs(&state).await
+    let provider = registry.active_provider()?;
+    provider.recommend_songs().await
 }
 
 #[tauri::command]
-pub async fn music_search_hot(state: State<'_, NcmState>) -> Result<serde_json::Value, String> {
-    NcmService::search_hot_detail(&state).await
+pub async fn music_search_hot(
+    registry: State<'_, ProviderRegistry>,
+) -> Result<serde_json::Value, String> {
+    let provider = registry.active_provider()?;
+    provider.hot_searches().await
+}
+
+#[tauri::command]
+pub async fn music_set_provider(
+    registry: State<'_, ProviderRegistry>,
+    provider: String,
+) -> Result<(), String> {
+    registry.set_active(&provider)
+}
+
+#[tauri::command]
+pub async fn music_get_provider(
+    registry: State<'_, ProviderRegistry>,
+) -> Result<String, String> {
+    registry.get_active_kind()
+}
+
+#[tauri::command]
+pub async fn music_logout(
+    registry: State<'_, ProviderRegistry>,
+) -> Result<(), String> {
+    let provider = registry.active_provider()?;
+    provider.logout().await
 }

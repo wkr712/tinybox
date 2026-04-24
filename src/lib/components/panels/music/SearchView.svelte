@@ -52,7 +52,7 @@
         bind:value={query}
         onkeydown={handleKeydown}
         placeholder="搜索歌曲..."
-        class="w-full bg-white/[0.05] text-xs text-white/80 placeholder:text-white/20 px-3 py-1.5 rounded-lg outline-none focus:ring-1 focus:ring-accent-cyan/30"
+        class="w-full bg-white/[0.05] text-xs text-white/80 placeholder:text-white/20 px-3 py-1.5 rounded-lg outline-none focus:ring-1 focus:ring-accent-primary/30"
       />
       <button onclick={handleSearch} class="absolute right-2 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 active:scale-90 transition-all" aria-label="搜索">
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -85,7 +85,7 @@
               onclick={() => handleHotClick(h.search_word)}
               class="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-white/[0.03] active:scale-[0.99] transition-all text-left"
             >
-              <span class="text-[10px] w-4 text-right shrink-0 {i < 3 ? 'text-accent-cyan' : 'text-white/15'}">{i + 1}</span>
+              <span class="text-[10px] w-4 text-right shrink-0 {i < 3 ? 'text-accent-primary' : 'text-white/15'}">{i + 1}</span>
               <div class="flex-1 min-w-0">
                 <div class="text-[11px] text-white/60 truncate">{h.search_word}</div>
                 {#if h.content}

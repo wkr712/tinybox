@@ -155,7 +155,7 @@
         aria-valuenow={Math.round(progressPercent)}
         onmousedown={handleProgressDown}
       >
-        <div class="h-full bg-accent-cyan/60 rounded-full {playing && !progressDragging ? 'progress-playing' : ''}" style="width: {progressPercent}%"></div>
+        <div class="h-full bg-accent-primary/60 rounded-full {playing && !progressDragging ? 'progress-playing' : ''}" style="width: {progressPercent}%"></div>
       </div>
       <div class="flex justify-between mt-1">
         <span class="text-[9px] text-white/20">{formatDuration(progress * 1000)}</span>
@@ -168,7 +168,7 @@
       <button onclick={playPrev} class="w-7 h-7 rounded-full flex items-center justify-center text-white/40 hover:text-white/70 transition-all active:scale-90" aria-label="上一首">
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2"/></svg>
       </button>
-      <button onclick={togglePlay} class="w-9 h-9 rounded-full bg-accent-cyan/20 flex items-center justify-center text-accent-cyan hover:bg-accent-cyan/30 transition-all active:scale-90" aria-label={playing ? "暂停" : "播放"}>
+      <button onclick={togglePlay} class="w-9 h-9 rounded-full bg-accent-primary/20 flex items-center justify-center text-accent-primary hover:bg-accent-primary/30 transition-all active:scale-90" aria-label={playing ? "暂停" : "播放"}>
         {#if playing}
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
         {:else}
@@ -193,7 +193,7 @@
         step="0.05"
         value={vol}
         oninput={handleVolumeChange}
-        class="flex-1 h-1 appearance-none bg-white/10 rounded-full outline-none accent-accent-cyan [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-accent-cyan"
+        class="flex-1 h-1 appearance-none bg-white/10 rounded-full outline-none accent-accent-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-accent-primary"
       />
     </div>
 
@@ -206,7 +206,7 @@
             <div
               data-idx={i}
               class="text-[11px] py-1 leading-relaxed transition-all duration-500 {i === activeLyricIdx
-                ? 'text-accent-cyan scale-[1.02] origin-left'
+                ? 'text-accent-primary scale-[1.02] origin-left'
                 : i < activeLyricIdx
                   ? 'text-white/15'
                   : 'text-white/35'}"
@@ -257,7 +257,7 @@
 
   @keyframes pulse-glow {
     0%, 100% { box-shadow: none; }
-    50% { box-shadow: 0 0 8px rgba(0, 229, 255, 0.3); }
+    50% { box-shadow: 0 0 8px color-mix(in srgb, var(--color-accent-primary) 30%, transparent); }
   }
 
   @keyframes subtle-spin {

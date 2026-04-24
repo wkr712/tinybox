@@ -1,6 +1,6 @@
 <script lang="ts">
   import { deleteFile, copyOut, updateTags, formatSize, fileIcon } from "../../../stores/dropzone";
-  import { open } from "@tauri-apps/plugin-dialog";
+  import { open, ask } from "@tauri-apps/plugin-dialog";
   import type { DropZoneFile } from "../../../types/dropzone";
 
   let { file }: { file: DropZoneFile } = $props();
@@ -14,9 +14,8 @@
 
   async function handleDelete(e: MouseEvent) {
     e.stopPropagation();
-    if (confirm(`删除 ${file.file_name}？`)) {
-      await deleteFile(file.id);
-    }
+    const yes = await ask(`删除 ${file.file_name}？`, { title: "确认删除", kind: "warning", okLabel: "删除", cancelLabel: "取消" });
+    if (yes) await deleteFile(file.id);
   }
 
   async function handleCopyOut(e: MouseEvent) {
@@ -72,7 +71,7 @@
         onkeydown={(e) => { if (e.key === "Enter") saveTags(); if (e.key === "Escape") { editingTags = false; } }}
         onblur={saveTags}
         placeholder="标签（逗号分隔）"
-        class="mt-1 w-full bg-white/5 text-[10px] text-white/50 px-1.5 py-0.5 rounded outline-none focus:ring-1 focus:ring-accent-cyan/30"
+        class="mt-1 w-full bg-white/5 text-[10px] text-white/50 px-1.5 py-0.5 rounded outline-none focus:ring-1 focus:ring-accent-primary/30"
       />
     {:else if file.tags}
       <button
@@ -94,7 +93,7 @@
   <div class="shrink-0 flex items-center gap-1 {showActions ? 'opacity-100' : 'opacity-0'} transition-opacity">
     <button
       onclick={handleCopyOut}
-      class="w-5 h-5 rounded flex items-center justify-center hover:bg-accent-cyan/20 text-white/30 hover:text-accent-cyan active:scale-90 transition-all"
+      class="w-5 h-5 rounded flex items-center justify-center hover:bg-accent-primary/20 text-white/30 hover:text-accent-primary active:scale-90 transition-all"
       title="导出"
     >
       <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

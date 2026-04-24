@@ -33,7 +33,7 @@
   <button
     onclick={handleToggle}
     class="todo-check w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors {checkBounce ? 'bounce' : ''}"
-    style="border-color: {todo.completed ? 'var(--color-accent-cyan)' : 'rgba(255,255,255,0.2)'}; background: {todo.completed ? 'var(--color-accent-cyan)' : 'transparent'}"
+    style="border-color: {todo.completed ? 'var(--color-accent-primary)' : 'rgba(255,255,255,0.2)'}; background: {todo.completed ? 'var(--color-accent-primary)' : 'transparent'}"
     use:pressEffect={{ scale: 0.85 }}
   >
     {#if todo.completed}

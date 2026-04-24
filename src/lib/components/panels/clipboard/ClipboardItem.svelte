@@ -51,7 +51,7 @@
 
   <div class="flex items-center gap-0.5 shrink-0 {showActions || copied ? 'opacity-100' : 'opacity-0'} transition-opacity">
     {#if copied}
-      <span class="copied-badge text-[10px] px-1.5 py-0.5 rounded" style="background: rgba(0,229,255,0.15); color: var(--color-accent-cyan);" transition:fly={{ y: -4, duration: 150 }}>
+      <span class="copied-badge text-[10px] px-1.5 py-0.5 rounded" style="background: color-mix(in srgb, var(--color-accent-primary) 15%, transparent); color: var(--color-accent-primary);" transition:fly={{ y: -4, duration: 150 }}>
         已复制
       </span>
     {/if}
