@@ -21,6 +21,10 @@
   let showProviderMenu = $state(false);
   let unsubs: (() => void)[] = [];
 
+  function handleClickOutside(e: MouseEvent) {
+    if (showProviderMenu) showProviderMenu = false;
+  }
+
   const providers: { id: MusicProviderKind; label: string }[] = [
     { id: "ncm", label: "网易云音乐" },
     { id: "qqmusic", label: "QQ音乐" },
@@ -59,12 +63,14 @@
   }
 </script>
 
-<div class="h-full flex flex-col">
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<div class="h-full flex flex-col" onclick={handleClickOutside}>
   <!-- Provider selector + account bar -->
   <div class="flex items-center justify-between pb-1.5">
     <div class="relative">
       <button
-        onclick={() => (showProviderMenu = !showProviderMenu)}
+        onclick={(e) => { e.stopPropagation(); showProviderMenu = !showProviderMenu; }}
         class="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-white/[0.04] active:scale-95 transition-all"
       >
         <span class="text-[10px] text-white/60">{providers.find(p => p.id === provider)?.label || provider}</span>

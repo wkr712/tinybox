@@ -34,6 +34,7 @@
   }
 
   function handleKeydown(e: KeyboardEvent) {
+    if (!get(clipboardQuickOpen)) return;
     if (e.key === "ArrowDown") {
       e.preventDefault();
       selectedIdx = Math.min(selectedIdx + 1, items.length - 1);
@@ -55,9 +56,9 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-{#if items.length > 0}
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="cq-overlay" transition:fly={{ y: 8, duration: 150 }}>
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="cq-overlay" transition:fly={{ y: 8, duration: 150 }}>
+  {#if items.length > 0}
     <div class="text-[9px] text-white/15 px-3 py-1.5 border-b border-white/5">剪贴板历史</div>
     <div class="cq-list">
       {#each items as item, i (item.id)}
@@ -82,8 +83,13 @@
     <div class="cq-footer">
       ↑↓ 切换 · Enter 确认 · 1-9 快选 · Esc 关闭
     </div>
-  </div>
-{/if}
+  {:else}
+    <div class="flex-1 flex flex-col items-center justify-center gap-2">
+      <span class="text-xs text-white/20">暂无剪贴板历史</span>
+      <span class="text-[10px] text-white/10">按 Esc 关闭</span>
+    </div>
+  {/if}
+</div>
 
 <style>
   .cq-overlay {
@@ -92,7 +98,8 @@
     z-index: 100;
     display: flex;
     flex-direction: column;
-    background: rgba(14, 14, 24, 0.95);
+    background: var(--color-dark-bg);
+    opacity: 0.96;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-radius: 12px;
@@ -126,22 +133,22 @@
     width: 16px;
     text-align: center;
     font-size: 9px;
-    color: rgba(255, 255, 255, 0.15);
+    color: var(--color-text-muted);
     flex-shrink: 0;
     font-weight: 500;
   }
 
   .cq-time {
     font-size: 9px;
-    color: rgba(255, 255, 255, 0.15);
+    color: var(--color-text-muted);
     flex-shrink: 0;
   }
 
   .cq-footer {
     padding: 4px 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid var(--color-border-subtle);
     text-align: center;
     font-size: 9px;
-    color: rgba(255, 255, 255, 0.12);
+    color: var(--color-text-muted);
   }
 </style>
