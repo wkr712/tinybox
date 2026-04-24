@@ -137,9 +137,11 @@ impl MusicProvider for NcmProvider {
             .map_err(|e| e.to_string())?;
         let url = resp.body["data"][0]["url"]
             .as_str()
-            .unwrap_or("")
-            .to_string();
-        Ok(url)
+            .ok_or("Song URL not available (may require VIP or region-restricted)")?;
+        if url.is_empty() {
+            return Err("Song URL not available (may require VIP)".to_string());
+        }
+        Ok(url.to_string())
     }
 
     async fn lyric(&self, id: &str) -> Result<Value, String> {

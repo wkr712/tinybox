@@ -46,6 +46,7 @@ impl AudioState {
                             let tx_clone = tx_clone.clone();
                             if url.starts_with("http://") || url.starts_with("https://") {
                                 let client = http_client.clone();
+                                let emit_handle = app_handle.clone();
                                 std::thread::spawn(move || {
                                     let bytes = client
                                         .get(&url)
@@ -56,7 +57,10 @@ impl AudioState {
                                     if let Some(data) = bytes {
                                         let _ = tx_clone.send(AudioMsg::PlayBytes(data));
                                     } else {
-                                        let _ = tx_clone.send(AudioMsg::Stop);
+                                        let _ = emit_handle.emit(
+                                            "audio-state-changed",
+                                            serde_json::json!({"playing": false, "reason": "error", "error": "failed to fetch audio"}),
+                                        );
                                     }
                                 });
                             } else if let Ok(file) = std::fs::File::open(&url) {

@@ -9,6 +9,7 @@
   let status = $state<"loading" | "waiting" | "scanned" | "expired" | "error">("loading");
   let pollTimer: ReturnType<typeof setInterval> | null = null;
   let expiryTimer: ReturnType<typeof setTimeout> | null = null;
+  let destroyed = false;
   let provider = $state<MusicProviderKind>("ncm");
 
   const providerLabels: Record<MusicProviderKind, { name: string; hint: string }> = {
@@ -23,6 +24,7 @@
   });
 
   onDestroy(() => {
+    destroyed = true;
     if (pollTimer) clearInterval(pollTimer);
     if (expiryTimer) clearTimeout(expiryTimer);
   });
@@ -63,11 +65,13 @@
         } else if (code === 803) {
           clearInterval(pollTimer!);
           clearTimeout(expiryTimer!);
+          if (destroyed) return;
           const ok = await fetchLoginStatus();
+          if (destroyed) return;
           if (ok) {
             const u = get(user);
             if (u) await fetchUserPlaylists(u.user_id);
-            currentView.set("discover");
+            if (!destroyed) currentView.set("discover");
           }
         }
       } catch {

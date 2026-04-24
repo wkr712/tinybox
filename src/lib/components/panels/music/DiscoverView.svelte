@@ -18,11 +18,13 @@
     unsubs.push(recommendSongs.subscribe((v) => (rsongs = v)));
     unsubs.push(hotSearches.subscribe((v) => (hot = v)));
 
-    await Promise.all([
-      fetchRecommendPlaylists(),
-      fetchRecommendSongs(),
-      fetchHotSearches(),
-    ]);
+    try {
+      await Promise.all([
+        fetchRecommendPlaylists(),
+        fetchRecommendSongs(),
+        fetchHotSearches(),
+      ]);
+    } catch {}
     contentLoading = false;
   });
 

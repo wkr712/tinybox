@@ -104,7 +104,7 @@ function parseSong(s: any, _provider: MusicProviderKind): Song {
   return {
     id: String(s.id ?? s.songmid ?? ""),
     name: s.name || s.songname || "",
-    artists: s.artists || (s.ar || s.singer || []).map((a: any) => a.name || a).join(" / "),
+    artists: typeof s.artists === 'string' ? s.artists : (s.ar || s.singer || s.artists || []).map((a: any) => a.name || a).join(" / "),
     album: s.album || s.al?.name || s.albumname || "",
     album_id: s.album_id || s.al?.id || 0,
     duration: s.duration || s.dt || 0,
@@ -113,100 +113,110 @@ function parseSong(s: any, _provider: MusicProviderKind): Song {
 }
 
 export async function playSong(song: Song) {
-  const url = await invoke<string>("music_song_url", { id: String(song.id) });
-  if (!url) return false;
+  try {
+    const url = await invoke<string>("music_song_url", { id: String(song.id) });
+    if (!url) return false;
 
-  await invoke("music_play", { url });
-  currentSong.set(song);
-  playProgress.set(0);
-  startProgressTimer();
+    await invoke("music_play", { url });
+    currentSong.set(song);
+    playProgress.set(0);
+    startProgressTimer();
 
-  fetchLyrics(song.id).catch(() => {});
-  return true;
+    fetchLyrics(song.id).catch(() => {});
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function fetchLyrics(id: string) {
-  const resp = await invoke<Record<string, any>>("music_lyric", { id });
-  const lrcText = resp.lrc?.lyric || "";
-  lyrics.set(parseLrc(lrcText));
+  try {
+    const resp = await invoke<Record<string, any>>("music_lyric", { id });
+    const lrcText = resp.lrc?.lyric || "";
+    lyrics.set(parseLrc(lrcText));
+  } catch {}
 }
 
 export async function searchSongs(keywords: string) {
-  const resp = await invoke<Record<string, any>>("music_search", { keywords });
-  const provider = get(activeProvider);
-  const songs = resp.result?.songs || [];
-  searchResults.set(
-    songs.map((s: any) => parseSong(s, provider))
-  );
+  try {
+    const resp = await invoke<Record<string, any>>("music_search", { keywords });
+    const provider = get(activeProvider);
+    const songs = resp.result?.songs || [];
+    searchResults.set(songs.map((s: any) => parseSong(s, provider)));
+  } catch {}
 }
 
 export async function pauseMusic() {
-  await invoke("music_pause");
+  try { await invoke("music_pause"); } catch {}
   stopProgressTimer();
 }
 
 export async function resumeMusic() {
-  await invoke("music_resume");
+  try { await invoke("music_resume"); } catch {}
   startProgressTimer();
 }
 
 export async function stopMusic() {
-  await invoke("music_stop");
+  try { await invoke("music_stop"); } catch {}
   currentSong.set(null);
   playProgress.set(0);
   stopProgressTimer();
 }
 
 export async function setVolume(vol: number) {
-  await invoke("music_set_volume", { volume: vol });
+  try { await invoke("music_set_volume", { volume: vol }); } catch {}
   volume.set(vol);
 }
 
 export async function seekTo(positionSeconds: number) {
-  await invoke("music_seek", { positionMs: Math.round(positionSeconds * 1000) });
+  try { await invoke("music_seek", { positionMs: Math.round(positionSeconds * 1000) }); } catch {}
   playProgress.set(positionSeconds);
 }
 
 export async function fetchRecommendPlaylists() {
-  const resp = await invoke<Record<string, any>>("music_personalized", { limit: 12 });
-  if (resp.result) {
-    recommendPlaylists.set(
-      resp.result.map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        cover_img_url: p.picUrl || p.cover_img_url || "",
-        track_count: p.trackCount || p.track_count || 0,
-        creator: p.copywriter || p.creator || "",
-      }))
-    );
-  }
+  try {
+    const resp = await invoke<Record<string, any>>("music_personalized", { limit: 12 });
+    if (resp.result) {
+      recommendPlaylists.set(
+        resp.result.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          cover_img_url: p.picUrl || p.cover_img_url || "",
+          track_count: p.trackCount || p.track_count || 0,
+          creator: p.copywriter || p.creator || "",
+        }))
+      );
+    }
+  } catch {}
 }
 
 export async function fetchRecommendSongs() {
-  const resp = await invoke<Record<string, any>>("music_recommend_songs");
-  const provider = get(activeProvider);
-  const songs = resp.data?.dailySongs || resp.data?.daily_songs || resp.data || [];
-  if (Array.isArray(songs)) {
-    recommendSongs.set(
-      songs.slice(0, 20).map((s: any) => parseSong(s, provider))
-    );
-  }
+  try {
+    const resp = await invoke<Record<string, any>>("music_recommend_songs");
+    const provider = get(activeProvider);
+    const songs = resp.data?.dailySongs || resp.data?.daily_songs || resp.data || [];
+    if (Array.isArray(songs)) {
+      recommendSongs.set(songs.slice(0, 20).map((s: any) => parseSong(s, provider)));
+    }
+  } catch {}
 }
 
 export async function fetchHotSearches() {
-  const resp = await invoke<Record<string, any>>("music_search_hot");
-  const hotList = resp.result?.hots || resp.data || [];
-  hotSearches.set(
-    hotList.map((h: any) => ({
-      search_word: h.searchWord || h.search_word || "",
-      score: h.score || 0,
-      content: h.content || "",
-    }))
-  );
+  try {
+    const resp = await invoke<Record<string, any>>("music_search_hot");
+    const hotList = resp.result?.hots || resp.data || [];
+    hotSearches.set(
+      hotList.map((h: any) => ({
+        search_word: h.searchWord || h.search_word || "",
+        score: h.score || 0,
+        content: h.content || "",
+      }))
+    );
+  } catch {}
 }
 
 export async function switchProvider(provider: MusicProviderKind) {
-  await invoke("music_set_provider", { provider });
+  try { await invoke("music_set_provider", { provider }); } catch {}
   activeProvider.set(provider);
   // Reset state
   user.set(null);
@@ -254,6 +264,9 @@ export async function initAudioListener() {
             playSong(trackList[idx + 1]);
           }
         }
+      } else if (event.payload.reason === "error") {
+        currentSong.set(null);
+        playProgress.set(0);
       }
     }
   });

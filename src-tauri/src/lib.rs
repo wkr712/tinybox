@@ -38,9 +38,11 @@ pub fn run() {
             app.manage(AudioState::new(app.handle().clone()));
 
             // Initialize music provider registry
-            if let Ok(data_dir) = app.path().app_data_dir() {
-                app.manage(ProviderRegistry::new(data_dir));
-            }
+            let data_dir = app
+                .path()
+                .app_data_dir()
+                .unwrap_or_else(|_| std::env::temp_dir());
+            app.manage(ProviderRegistry::new(data_dir));
 
             let monitor = ClipboardMonitor::new(app.handle().clone());
             if let Ok(mut guard) = app.state::<ClipboardMonitorState>().0.lock() {
@@ -60,7 +62,6 @@ pub fn run() {
             commands::music::music_user_playlist,
             commands::music::music_playlist_detail,
             commands::music::music_song_url,
-            commands::music::music_song_detail,
             commands::music::music_lyric,
             commands::music::music_search,
             commands::music::music_play,

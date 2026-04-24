@@ -21,7 +21,7 @@ export async function loadFiles() {
 }
 
 export async function storeFiles(filePaths: string[]) {
-  const stored: StoredFile[] = await invoke("dropzone_store", { filePaths });
+  const stored: StoredFile[] = await invoke("dropzone_store", { file_paths: filePaths });
 
   for (const f of stored) {
     await execute(

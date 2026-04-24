@@ -62,17 +62,6 @@ pub async fn music_song_url(
 }
 
 #[tauri::command]
-pub async fn music_song_detail(
-    registry: State<'_, ProviderRegistry>,
-    ids: String,
-) -> Result<serde_json::Value, String> {
-    // Return song detail via search or cached data
-    let provider = registry.active_provider()?;
-    let first_id = ids.split(',').next().unwrap_or("");
-    provider.search(first_id, 1).await
-}
-
-#[tauri::command]
 pub async fn music_lyric(
     registry: State<'_, ProviderRegistry>,
     id: String,

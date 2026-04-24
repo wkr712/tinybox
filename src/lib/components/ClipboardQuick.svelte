@@ -35,6 +35,8 @@
 
   function handleKeydown(e: KeyboardEvent) {
     if (!get(clipboardQuickOpen)) return;
+    const tag = (e.target as HTMLElement)?.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
     if (e.key === "ArrowDown") {
       e.preventDefault();
       selectedIdx = Math.min(selectedIdx + 1, items.length - 1);

@@ -309,13 +309,13 @@ impl MusicProvider for KugouProvider {
 }
 
 fn urlencoding(s: &str) -> String {
-    s.chars()
-        .map(|c| {
-            if c.is_alphanumeric() || c == '-' || c == '_' || c == '.' || c == '~' {
-                c.to_string()
-            } else {
-                format!("%{:02X}", c as u8)
-            }
-        })
-        .collect()
+    let mut result = String::with_capacity(s.len());
+    for byte in s.as_bytes() {
+        if byte.is_ascii_alphanumeric() || matches!(*byte, b'-' | b'_' | b'.' | b'~') {
+            result.push(*byte as char);
+        } else {
+            result.push_str(&format!("%{:02X}", byte));
+        }
+    }
+    result
 }

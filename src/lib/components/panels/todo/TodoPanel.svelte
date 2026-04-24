@@ -39,6 +39,9 @@
       runState = v;
       if (v === "running" && !timerInterval) {
         startInterval();
+      } else if (v !== "running" && timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
       }
     }));
     unsubs.push(timerPhase.subscribe((v) => (phase = v)));

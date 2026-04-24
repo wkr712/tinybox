@@ -57,6 +57,7 @@
   });
 
   $effect(() => {
+    if (!mounted) return;
     if (isMinimized && song && playing && lrc.length > 0) {
       expandIslandForLyrics();
     } else if (isMinimized) {
@@ -66,10 +67,8 @@
 
   async function selectPanel(id: string) {
     if (current === id) {
-      current = null;
       await collapseWindow();
     } else {
-      current = id;
       await expandWindow(id);
     }
   }
