@@ -1,13 +1,11 @@
 <script lang="ts">
   import { editingNoteId, deleteNote, togglePin } from "../../../stores/notes";
   import type { Note } from "../../../types/note";
-  import { pressEffect } from "../../../utils/pressEffect";
   import { ask } from "@tauri-apps/plugin-dialog";
 
   let { note }: { note: Note } = $props();
 
   let showActions = $state(false);
-  let pinAnimating = $state(false);
 
   function edit() {
     editingNoteId.set(note.id);
@@ -23,8 +21,6 @@
 
   function handlePinClick(e: MouseEvent) {
     e.stopPropagation();
-    pinAnimating = true;
-    setTimeout(() => (pinAnimating = false), 500);
     togglePin(note.id, note.pinned);
   }
 
@@ -32,53 +28,42 @@
     e.stopPropagation();
     confirmDelete();
   }
-
-  function handleActionsEnter() { showActions = true; }
-  function handleActionsLeave() { showActions = false; }
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <div
-  class="group note-card relative rounded-xl p-3 cursor-pointer transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] border"
-  style="background: {note.color}40; border-color: {note.color}60;"
-  onmouseenter={handleActionsEnter}
-  onmouseleave={handleActionsLeave}
+  class="note-card relative rounded-[10px] px-3 py-2.5 cursor-pointer transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
+  onmouseenter={() => (showActions = true)}
+  onmouseleave={() => (showActions = false)}
   onclick={edit}
   role="button"
   tabindex="0"
   onkeydown={(e) => e.key === "Enter" && edit()}
 >
-  {#if note.pinned && !showActions}
-    <div class="absolute top-1.5 right-1.5 pin-icon {pinAnimating ? 'pin-drop' : ''}">
-      <svg class="w-3 h-3 text-accent-primary/60" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
-      </svg>
-    </div>
-  {/if}
+  <div class="note-bar" style="background: {note.color}"></div>
 
-  <div class="text-xs font-medium text-white/90 truncate pr-4">{displayTitle}</div>
+  <div class="text-xs font-medium text-white/85 truncate pr-4">{displayTitle}</div>
   {#if preview}
-    <div class="text-[11px] text-white/40 mt-1 line-clamp-2 leading-relaxed">{preview}</div>
+    <div class="text-[11px] text-white/35 mt-0.5 line-clamp-2 leading-relaxed">{preview}</div>
   {/if}
 
-  <div class="text-[10px] text-white/20 mt-2">{note.updated_at}</div>
+  <div class="text-[10px] text-white/15 mt-1.5">{note.updated_at}</div>
 
   {#if showActions}
-    <div class="absolute top-1.5 right-1.5 flex gap-1">
+    <div class="absolute top-2 right-2 flex gap-1">
       <button
         onclick={handlePinClick}
-        class="w-5 h-5 rounded flex items-center justify-center bg-white/10 hover:bg-white/20 active:scale-90 transition-all"
+        class="w-5 h-5 rounded flex items-center justify-center bg-white/[0.06] hover:bg-white/10 active:scale-90 transition-all"
         title={note.pinned ? "取消置顶" : "置顶"}
-        use:pressEffect={{ scale: 0.85 }}
       >
-        <svg class="w-3 h-3 pin-icon {pinAnimating ? 'pin-drop' : ''}" style="color: {note.pinned ? 'var(--color-accent-primary)' : 'rgba(255,255,255,0.5)'}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <svg class="w-3 h-3" style="color: {note.pinned ? 'var(--color-accent-primary)' : 'rgba(255,255,255,0.4)'}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
           <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
         </svg>
       </button>
       <button
         onclick={handleDeleteClick}
-        class="w-5 h-5 rounded flex items-center justify-center bg-white/10 hover:bg-red-500/40 active:scale-90 transition-all text-white/50"
+        class="w-5 h-5 rounded flex items-center justify-center bg-white/[0.06] hover:bg-red-500/30 active:scale-90 transition-all text-white/40"
         title="删除"
       >
         <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -87,17 +72,33 @@
         </svg>
       </button>
     </div>
+  {:else if note.pinned}
+    <div class="absolute top-2 right-2">
+      <svg class="w-3 h-3 text-accent-primary/50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
+      </svg>
+    </div>
   {/if}
 </div>
 
 <style>
-  .pin-icon.pin-drop {
-    animation: pin-drop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  .note-card {
+    border: 1px solid var(--color-border-default);
+    background: var(--color-surface-3);
+    position: relative;
+    overflow: hidden;
   }
 
-  @keyframes pin-drop {
-    0% { transform: rotate(-90deg) scale(0.5); opacity: 0; }
-    60% { transform: rotate(10deg) scale(1.1); }
-    100% { transform: rotate(0deg) scale(1); opacity: 1; }
+  .note-card:hover {
+    border-color: var(--color-border-strong);
+  }
+
+  .note-bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 3px 0 0 3px;
   }
 </style>

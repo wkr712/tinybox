@@ -1,12 +1,19 @@
 @import "tailwindcss";
 @import "./lib/styles/themes.css";
 
+html, body {
+  background: transparent;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
 @theme {
   --color-dark-bg: #0e0e18;
   --color-dark-surface: #161625;
   --color-dark-border: rgba(255, 255, 255, 0.08);
-  --color-accent-primary: #00e5ff;
-  --color-accent-secondary: #b388ff;
+  --color-accent-primary: #2ccde0;
+  --color-accent-secondary: #a890e0;
 
   --color-text-primary: rgba(255, 255, 255, 0.92);
   --color-text-secondary: rgba(255, 255, 255, 0.6);
@@ -36,12 +43,6 @@
   initial-value: 20%;
 }
 
-@property --glow-x {
-  syntax: "<percentage>";
-  inherits: false;
-  initial-value: 50%;
-}
-
 /* ─── Primary CTA button ─── */
 .glow-button {
   background: linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary));
@@ -52,37 +53,19 @@
   padding: 6px 14px;
   cursor: pointer;
   position: relative;
-  overflow: hidden;
   transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
               box-shadow 0.3s ease;
 }
 
-.glow-button::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.25) 50%, transparent 60%);
-  transform: translateX(-100%);
-  transition: transform 0.5s ease;
-}
-
 .glow-button:hover {
   box-shadow:
-    0 0 20px color-mix(in srgb, var(--color-accent-primary) 35%, transparent),
-    0 0 40px color-mix(in srgb, var(--color-accent-secondary) 15%, transparent),
+    0 0 16px color-mix(in srgb, var(--color-accent-primary) 25%, transparent),
     0 2px 8px rgba(0, 0, 0, 0.3);
   transform: translateY(-1px);
 }
 
-.glow-button:hover::before {
-  transform: translateX(100%);
-}
-
 .glow-button:active {
   transform: scale(0.95) translateY(0);
-  box-shadow:
-    0 0 10px color-mix(in srgb, var(--color-accent-primary) 20%, transparent),
-    0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* ─── Sidebar icons ─── */
@@ -105,8 +88,7 @@
     background 0.2s ease,
     border-color 0.2s ease,
     color 0.15s ease,
-    opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.25s ease;
+    opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sidebar-icon.icon-enter {
@@ -114,26 +96,9 @@
   transform: translateY(0) scale(1);
 }
 
-.sidebar-icon::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent-primary) 20%, transparent), color-mix(in srgb, var(--color-accent-secondary) 20%, transparent));
-  opacity: 0;
-  z-index: -1;
-  filter: blur(6px);
-  transition: opacity 0.3s ease, filter 0.3s ease;
-}
-
 .sidebar-icon:hover {
   background: var(--color-surface-5);
-  color: var(--color-text-primary);
   border-color: var(--color-border-default);
-}
-
-.sidebar-icon:hover::before {
-  opacity: 0.6;
 }
 
 .sidebar-icon:active {
@@ -141,17 +106,9 @@
 }
 
 .sidebar-icon.active {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent-primary) 10%, transparent), color-mix(in srgb, var(--color-accent-secondary) 8%, transparent));
+  background: color-mix(in srgb, var(--color-accent-primary) 8%, transparent);
   color: var(--color-accent-primary);
-  border-color: color-mix(in srgb, var(--color-accent-primary) 20%, transparent);
-  box-shadow:
-    0 0 12px color-mix(in srgb, var(--color-accent-primary) 12%, transparent),
-    inset 0 0 12px color-mix(in srgb, var(--color-accent-primary) 4%, transparent);
-}
-
-.sidebar-icon.active::before {
-  opacity: 0.8;
-  animation: glow-breathe 2s ease-in-out infinite;
+  border-color: color-mix(in srgb, var(--color-accent-primary) 15%, transparent);
 }
 
 /* ─── App entrance ─── */
@@ -166,43 +123,17 @@
   transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ─── Root ambient effects ─── */
+/* ─── Root ambient gradient ─── */
 .root-container::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
   background:
-    radial-gradient(ellipse 60% 50% at var(--gradient-x) var(--gradient-y), color-mix(in srgb, var(--color-accent-primary) 4%, transparent) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 60% at calc(100% - var(--gradient-x)) calc(100% - var(--gradient-y)), color-mix(in srgb, var(--color-accent-secondary) 3%, transparent) 0%, transparent 60%);
+    radial-gradient(ellipse 60% 50% at var(--gradient-x) var(--gradient-y), color-mix(in srgb, var(--color-accent-primary) 1.5%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at calc(100% - var(--gradient-x)) calc(100% - var(--gradient-y)), color-mix(in srgb, var(--color-accent-secondary) 1%, transparent) 0%, transparent 60%);
   pointer-events: none;
   animation: gradient-drift 12s ease-in-out infinite alternate;
-}
-
-.root-container::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: conic-gradient(
-    from 0deg at var(--glow-x) 50%,
-    transparent 0deg,
-    color-mix(in srgb, var(--color-accent-primary) 1.5%, transparent) 60deg,
-    transparent 120deg,
-    color-mix(in srgb, var(--color-accent-secondary) 1%, transparent) 240deg,
-    transparent 360deg
-  );
-  pointer-events: none;
-  animation: aurora-rotate 20s linear infinite;
-  opacity: 0.7;
-}
-
-/* ─── Keyframes ─── */
-@keyframes glow-breathe {
-  0%, 100% { opacity: 0.6; filter: blur(6px); }
-  50% { opacity: 1; filter: blur(10px); }
 }
 
 @keyframes gradient-drift {
@@ -210,11 +141,6 @@
   33% { --gradient-x: 60%; --gradient-y: 40%; }
   66% { --gradient-x: 40%; --gradient-y: 70%; }
   100% { --gradient-x: 75%; --gradient-y: 55%; }
-}
-
-@keyframes aurora-rotate {
-  from { --glow-x: 0%; transform: rotate(0deg); }
-  to { --glow-x: 100%; transform: rotate(360deg); }
 }
 
 /* ─── Scrollbar ─── */
@@ -261,5 +187,5 @@ textarea {
 input:focus,
 select:focus,
 textarea:focus {
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent-primary) 20%, transparent), 0 0 12px color-mix(in srgb, var(--color-accent-primary) 6%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent-primary) 20%, transparent);
 }

@@ -100,8 +100,7 @@
     z-index: 100;
     display: flex;
     flex-direction: column;
-    background: var(--color-dark-bg);
-    opacity: 0.96;
+    background: color-mix(in srgb, var(--color-dark-bg) 96%, transparent);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-radius: 12px;

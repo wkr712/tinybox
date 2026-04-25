@@ -10,12 +10,12 @@ export interface Note {
 }
 
 export const NOTE_COLORS = [
-  "#1a1a2e",
-  "#2d1b3d",
-  "#1b2d3d",
-  "#1b3d2d",
-  "#3d2d1b",
-  "#3d1b2d",
-  "#2d3d1b",
-  "#1b1b3d",
+  "#2a1a3e",
+  "#1a2e4a",
+  "#1a3e2a",
+  "#3e2a1a",
+  "#3e1a2e",
+  "#1a3e3e",
+  "#3e3e1a",
+  "#2e1a3e",
 ] as const;

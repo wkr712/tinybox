@@ -6,32 +6,43 @@ import { pauseMusic, resumeMusic, currentView, isPlaying } from "../stores/music
 import { clipboardQuickOpen } from "../stores/clipboard";
 
 let registered: string[] = [];
+let registering = false;
 
 export async function registerHotkeys() {
-  for (const key of registered) {
-    try { await unregister(key); } catch { /* ignore */ }
-  }
-  registered = [];
+  if (registering) return;
+  registering = true;
 
-  const s = getSettings();
-  const hotkeys: Record<string, () => void> = {
-    [s.hotkey_toggle_sidebar]: () => toggleSidebar(),
-    [s.hotkey_clipboard]: () => openClipboardQuick(),
-    [s.hotkey_new_note]: () => expandWindow("notes"),
-    [s.hotkey_play_pause]: () => togglePlayPause(),
-    [s.hotkey_show_lyrics]: () => showLyrics(),
-  };
-
-  for (const [shortcut, handler] of Object.entries(hotkeys)) {
-    if (!shortcut) continue;
-    try {
-      await register(shortcut, (event) => {
-        if (event.state === "Pressed") handler();
-      });
-      registered.push(shortcut);
-    } catch (e) {
-      console.warn(`Failed to register hotkey: ${shortcut}`, e);
+  try {
+    for (const key of registered) {
+      try { await unregister(key); } catch { /* not registered yet */ }
     }
+    registered = [];
+
+    // Small delay to let the OS fully release the old shortcuts
+    await new Promise((r) => setTimeout(r, 50));
+
+    const s = getSettings();
+    const hotkeys: Record<string, () => void> = {
+      [s.hotkey_toggle_sidebar]: () => toggleSidebar(),
+      [s.hotkey_clipboard]: () => openClipboardQuick(),
+      [s.hotkey_new_note]: () => expandWindow("notes"),
+      [s.hotkey_play_pause]: () => togglePlayPause(),
+      [s.hotkey_show_lyrics]: () => showLyrics(),
+    };
+
+    for (const [shortcut, handler] of Object.entries(hotkeys)) {
+      if (!shortcut) continue;
+      try {
+        await register(shortcut, (event) => {
+          if (event.state === "Pressed") handler();
+        });
+        registered.push(shortcut);
+      } catch (e) {
+        console.warn(`Failed to register hotkey: ${shortcut}`, e);
+      }
+    }
+  } finally {
+    registering = false;
   }
 }
 

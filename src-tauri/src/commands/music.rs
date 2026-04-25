@@ -1,4 +1,4 @@
-use crate::services::audio_player::{AudioPlayer, AudioState};
+use crate::services::audio_player::{AudioPlayer, AudioState, SpectrumData};
 use crate::services::music_provider::ProviderRegistry;
 use serde::Serialize;
 use std::time::Duration;
@@ -107,6 +107,11 @@ pub fn music_set_volume(state: State<'_, AudioState>, volume: f32) -> Result<(),
 #[tauri::command]
 pub fn music_seek(state: State<'_, AudioState>, position_ms: u64) -> Result<(), String> {
     AudioPlayer::seek(&state, Duration::from_millis(position_ms))
+}
+
+#[tauri::command]
+pub fn music_spectrum(state: State<'_, AudioState>) -> Result<SpectrumData, String> {
+    Ok(state.get_spectrum())
 }
 
 #[tauri::command]

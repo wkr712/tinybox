@@ -96,6 +96,7 @@
   }
 
   function handleProgressDown(e: MouseEvent) {
+    e.preventDefault();
     progressDragging = true;
     seekFromEvent(e);
     window.addEventListener("mousemove", handleProgressMove);

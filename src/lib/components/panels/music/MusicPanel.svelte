@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from "svelte";
   import {
     user, currentView, previousView, fetchLoginStatus, fetchUserPlaylists,
-    currentSong, isPlaying, activeProvider, switchProvider, logout,
+    currentSong, isPlaying, activeProvider, switchProvider, logout, getActiveProviderKind,
   } from "../../../stores/music";
   import { get } from "svelte/store";
   import type { MusicProviderKind } from "../../../types/music";
@@ -38,6 +38,7 @@
     unsubs.push(isPlaying.subscribe((v) => (playing = v)));
     unsubs.push(activeProvider.subscribe((v) => (provider = v)));
 
+    await getActiveProviderKind();
     const ok = await fetchLoginStatus();
     const currentUser = get(user);
     if (ok && currentUser) {
@@ -71,28 +72,27 @@
     <div class="relative">
       <button
         onclick={(e) => { e.stopPropagation(); showProviderMenu = !showProviderMenu; }}
-        class="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-white/[0.04] active:scale-95 transition-all"
+        class="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-white/[0.03] active:scale-95 transition-all"
       >
-        <span class="text-[10px] text-white/60">{providers.find(p => p.id === provider)?.label || provider}</span>
-        <svg class="w-3 h-3 text-white/25 transition-transform {showProviderMenu ? 'rotate-180' : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        <span class="text-[10px] text-white/50">{providers.find(p => p.id === provider)?.label || provider}</span>
+        <svg class="w-3 h-3 text-white/20 transition-transform {showProviderMenu ? 'rotate-180' : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
       {#if showProviderMenu}
         <!-- svelte-ignore a11y_no_static_element_interactions -->
         <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <div class="absolute top-full left-0 mt-1 bg-dark-surface/95 backdrop-blur-md border border-white/10 rounded-lg py-1 z-50 min-w-[140px] shadow-xl">
+        <div class="provider-menu">
           {#each providers as p (p.id)}
             <button
               onclick={() => handleSwitchProvider(p.id)}
-              class="w-full text-left px-3 py-1.5 text-[10px] {p.id === provider ? 'text-accent-primary bg-accent-primary/10' : 'text-white/50 hover:text-white/70 hover:bg-white/[0.03]'} transition-all"
+              class="provider-option {p.id === provider ? 'active' : ''}"
             >{p.label}</button>
           {/each}
           {#if u}
-            <div class="border-t border-white/5 mt-1 pt-1">
-              <button
-                onclick={handleLogout}
-                class="w-full text-left px-3 py-1.5 text-[10px] text-red-400/60 hover:text-red-400 hover:bg-red-500/10 transition-all"
-              >退出登录</button>
-            </div>
+            <div class="provider-divider"></div>
+            <button
+              onclick={handleLogout}
+              class="provider-option text-red-400/50 hover:text-red-400 hover:bg-red-500/8"
+            >退出登录</button>
           {/if}
         </div>
       {/if}
@@ -102,30 +102,30 @@
         {#if u.avatar_url}
           <img src={u.avatar_url} alt="" class="w-4 h-4 rounded-full" />
         {/if}
-        <span class="text-[10px] text-white/40 truncate max-w-[80px]">{u.nickname}</span>
+        <span class="text-[10px] text-white/30 truncate max-w-[80px]">{u.nickname}</span>
       </div>
     {/if}
   </div>
 
-  <!-- Tab bar when logged in -->
+  <!-- Tab bar -->
   {#if view !== "login"}
-    <div class="flex items-center gap-1 pb-2 border-b border-white/5 mb-2">
+    <div class="tab-bar">
       <button
         onclick={() => currentView.set('discover')}
-        class="px-2 py-1 text-[10px] rounded active:scale-95 transition-all {view === 'discover' ? 'text-accent-primary bg-accent-primary/10' : 'text-white/30 hover:text-white/50'}"
+        class="tab-item {view === 'discover' ? 'active' : ''}"
       >发现</button>
       <button
         onclick={() => currentView.set('playlists')}
-        class="px-2 py-1 text-[10px] rounded active:scale-95 transition-all {view === 'playlists' ? 'text-accent-primary bg-accent-primary/10' : 'text-white/30 hover:text-white/50'}"
+        class="tab-item {view === 'playlists' ? 'active' : ''}"
       >歌单</button>
       <button
         onclick={() => currentView.set('search')}
-        class="px-2 py-1 text-[10px] rounded active:scale-95 transition-all {view === 'search' ? 'text-accent-primary bg-accent-primary/10' : 'text-white/30 hover:text-white/50'}"
+        class="tab-item {view === 'search' ? 'active' : ''}"
       >搜索</button>
       {#if song}
         <button
           onclick={() => { previousView.set(view); currentView.set('nowplaying'); }}
-          class="px-2 py-1 text-[10px] rounded active:scale-95 transition-all {view === 'nowplaying' ? 'text-accent-primary bg-accent-primary/10' : 'text-white/30 hover:text-white/50'}"
+          class="tab-item {view === 'nowplaying' ? 'active' : ''}"
         >播放</button>
       {/if}
     </div>
@@ -148,3 +148,90 @@
     {/if}
   </div>
 </div>
+
+<style>
+  .provider-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+    background: color-mix(in srgb, var(--color-dark-surface) 95%, transparent);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--color-border-default);
+    border-radius: 8px;
+    padding: 4px 0;
+    z-index: 50;
+    min-width: 140px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  .provider-option {
+    width: 100%;
+    text-align: left;
+    padding: 5px 12px;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.45);
+    transition: all 0.15s ease;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: block;
+  }
+
+  .provider-option:hover {
+    color: rgba(255, 255, 255, 0.65);
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .provider-option.active {
+    color: var(--color-accent-primary);
+    background: color-mix(in srgb, var(--color-accent-primary) 8%, transparent);
+  }
+
+  .provider-divider {
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    margin: 4px 0;
+  }
+
+  .tab-bar {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--color-border-subtle);
+    position: relative;
+  }
+
+  .tab-item {
+    padding: 4px 8px;
+    font-size: 10px;
+    border-radius: 4px;
+    color: rgba(255, 255, 255, 0.25);
+    transition: all 0.15s ease;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .tab-item:hover {
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  .tab-item.active {
+    color: var(--color-accent-primary);
+  }
+
+  .tab-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: -9px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 1.5px;
+    background: var(--color-accent-primary);
+    border-radius: 1px;
+  }
+</style>

@@ -8,10 +8,6 @@
   let editingTags = $state(false);
   let tagInput = $state("");
 
-  const iconMap: Record<string, string> = {
-    image: "🖼", video: "🎬", audio: "🎵", pdf: "📄", zip: "📦", file: "📎",
-  };
-
   async function handleDelete(e: MouseEvent) {
     e.stopPropagation();
     const yes = await ask(`删除 ${file.file_name}？`, { title: "确认删除", kind: "warning", okLabel: "删除", cancelLabel: "取消" });
@@ -49,21 +45,27 @@
       }));
     }
   }
+
+  const iconMap: Record<string, string> = {
+    image: "🖼", video: "🎬", audio: "🎵", pdf: "📄", zip: "📦", file: "📎",
+  };
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-  class="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.03] active:scale-[0.99] transition-all duration-200 cursor-grab active:cursor-grabbing group"
+  class="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-white/[0.03] active:scale-[0.99] transition-all duration-150 cursor-grab active:cursor-grabbing group"
   draggable="true"
   ondragstart={handleDragStart}
   onmouseenter={() => (showActions = true)}
   onmouseleave={() => { showActions = false; }}
 >
-  <span class="text-base shrink-0">{iconMap[fileIcon(file.mime_type)] || "📎"}</span>
+  <div class="file-icon-block">
+    <span class="text-sm">{iconMap[fileIcon(file.mime_type)] || "📎"}</span>
+  </div>
 
   <div class="flex-1 min-w-0">
-    <div class="text-xs text-white/80 truncate">{file.file_name}</div>
-    <div class="text-[10px] text-white/20 mt-0.5">{formatSize(file.file_size)} · {(file.created_at || "").slice(0, 16)}</div>
+    <div class="text-xs text-white/75 truncate">{file.file_name}</div>
+    <div class="text-[10px] text-white/15 mt-0.5">{formatSize(file.file_size)} · {(file.created_at || "").slice(0, 16)}</div>
     {#if editingTags}
       <input
         type="text"
@@ -71,7 +73,7 @@
         onkeydown={(e) => { if (e.key === "Enter") saveTags(); if (e.key === "Escape") { editingTags = false; } }}
         onblur={saveTags}
         placeholder="标签（逗号分隔）"
-        class="mt-1 w-full bg-white/5 text-[10px] text-white/50 px-1.5 py-0.5 rounded outline-none focus:ring-1 focus:ring-accent-primary/30"
+        class="mt-1 w-full bg-white/[0.04] text-[10px] text-white/45 px-1.5 py-0.5 rounded outline-none border border-white/[0.06]"
       />
     {:else if file.tags}
       <button
@@ -79,13 +81,13 @@
         class="mt-1 flex flex-wrap gap-1 cursor-text"
       >
         {#each file.tags.split(",").map((t: string) => t.trim()).filter(Boolean) as tag}
-          <span class="text-[9px] bg-white/5 text-white/30 px-1.5 py-0.5 rounded">{tag}</span>
+          <span class="tag-chip">{tag}</span>
         {/each}
       </button>
     {:else}
       <button
         onclick={startEditTags}
-        class="mt-1 text-[9px] text-white/15 hover:text-white/30 transition-colors"
+        class="mt-1 text-[9px] text-white/10 hover:text-white/25 transition-colors"
       >+ 标签</button>
     {/if}
   </div>
@@ -93,7 +95,7 @@
   <div class="shrink-0 flex items-center gap-1 {showActions ? 'opacity-100' : 'opacity-0'} transition-opacity">
     <button
       onclick={handleCopyOut}
-      class="w-5 h-5 rounded flex items-center justify-center hover:bg-accent-primary/20 text-white/30 hover:text-accent-primary active:scale-90 transition-all"
+      class="w-5 h-5 rounded flex items-center justify-center hover:bg-accent-primary/15 text-white/25 hover:text-accent-primary active:scale-90 transition-all"
       title="导出"
     >
       <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -104,7 +106,7 @@
     </button>
     <button
       onclick={handleDelete}
-      class="w-5 h-5 rounded flex items-center justify-center hover:bg-red-500/30 text-white/30 hover:text-red-400 active:scale-90 transition-all"
+      class="w-5 h-5 rounded flex items-center justify-center hover:bg-red-500/20 text-white/25 hover:text-red-400 active:scale-90 transition-all"
       title="删除"
     >
       <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -114,3 +116,24 @@
     </button>
   </div>
 </div>
+
+<style>
+  .file-icon-block {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: var(--color-surface-5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .tag-chip {
+    font-size: 9px;
+    background: color-mix(in srgb, var(--color-accent-primary) 8%, transparent);
+    color: rgba(255, 255, 255, 0.35);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+</style>

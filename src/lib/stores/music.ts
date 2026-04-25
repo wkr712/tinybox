@@ -1,6 +1,6 @@
 import { writable, get } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import { listen, emit } from "@tauri-apps/api/event";
 import type { Song, Playlist, MusicUser, LyricLine, MusicView, MusicProviderKind, HotSearch } from "../types/music";
 
 export const activeProvider = writable<MusicProviderKind>("ncm");
@@ -22,6 +22,11 @@ export const recommendSongs = writable<Song[]>([]);
 export const hotSearches = writable<HotSearch[]>([]);
 
 let progressTimer: ReturnType<typeof setInterval> | null = null;
+let progressLastTick: number = 0;
+
+function emitNotification(title: string, body: string) {
+  emit("notification", { title, body }).catch(() => {});
+}
 
 export async function generateQr() {
   return await invoke<{ key: string; qrurl: string }>("music_qr_generate");
@@ -115,16 +120,22 @@ function parseSong(s: any, _provider: MusicProviderKind): Song {
 export async function playSong(song: Song) {
   try {
     const url = await invoke<string>("music_song_url", { id: String(song.id) });
-    if (!url) return false;
+    if (!url) {
+      emitNotification("播放失败", "无法获取歌曲链接");
+      return false;
+    }
 
     await invoke("music_play", { url });
     currentSong.set(song);
+    isPlaying.set(true);
     playProgress.set(0);
     startProgressTimer();
 
     fetchLyrics(song.id).catch(() => {});
     return true;
-  } catch {
+  } catch (e) {
+    isPlaying.set(false);
+    emitNotification("播放失败", String(song.name));
     return false;
   }
 }
@@ -281,12 +292,16 @@ export function destroyAudioListener() {
 
 function startProgressTimer() {
   stopProgressTimer();
+  progressLastTick = performance.now();
   progressTimer = setInterval(() => {
+    const now = performance.now();
+    const delta = (now - progressLastTick) / 1000;
+    progressLastTick = now;
     playProgress.update((p) => {
       const song = get(currentSong);
       const maxSeconds = (song?.duration || 0) / 1000;
-      if (maxSeconds > 0 && p + 0.2 >= maxSeconds) return p;
-      return p + 0.2;
+      if (maxSeconds > 0 && p + delta >= maxSeconds) return p;
+      return p + delta;
     });
   }, 200);
 }

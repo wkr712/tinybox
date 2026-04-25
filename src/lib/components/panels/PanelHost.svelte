@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { activePanel, collapseWindow, minimized, minimizeToIsland } from "../../stores/app";
-  import { getCurrentWindow } from "@tauri-apps/api/window";
+  import { activePanel, collapseWindow } from "../../stores/app";
+  import { activeProvider } from "../../stores/music";
   import NotesPanel from "./notes/NotesPanel.svelte";
   import TodoPanel from "./todo/TodoPanel.svelte";
   import ClipboardPanel from "./clipboard/ClipboardPanel.svelte";
@@ -10,10 +10,12 @@
   import SettingsPanel from "./settings/SettingsPanel.svelte";
 
   let current = $state<string | null>(null);
+  let provider = $state<string>("ncm");
   let unsubs: (() => void)[] = [];
 
   onMount(() => {
     unsubs.push(activePanel.subscribe((v) => (current = v)));
+    unsubs.push(activeProvider.subscribe((v) => (provider = v)));
   });
 
   onDestroy(() => {
@@ -21,59 +23,42 @@
     unsubs = [];
   });
 
-  const panelTitles: Record<string, string> = {
+  const baseTitles: Record<string, Record<string, string>> = {
+    music: {
+      ncm: "网易云音乐",
+      qqmusic: "QQ音乐",
+      kugou: "酷狗音乐",
+    },
+  };
+  const staticTitles: Record<string, string> = {
     notes: "便签",
     todo: "待办计时",
     clipboard: "剪贴板历史",
     dropzone: "文件暂存",
-    music: "网易云音乐",
     settings: "设置",
   };
+
+  let panelTitle = $derived(
+    current
+      ? (baseTitles[current]?.[provider] ?? staticTitles[current] ?? "")
+      : ""
+  );
 </script>
 
 <div class="h-full flex flex-col">
-  <!-- macOS-style title bar with traffic lights -->
   <div class="panel-header" data-tauri-drag-region>
-    <div class="traffic-lights">
-      <button
-        class="traffic-dot close"
-        onclick={() => getCurrentWindow().close()}
-        title="关闭"
-        aria-label="关闭窗口"
-      >
-        <svg width="8" height="8" viewBox="0 0 12 12">
-          <line x1="2" y1="2" x2="10" y2="10" stroke="rgba(80,0,0,0.8)" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="10" y1="2" x2="2" y2="10" stroke="rgba(80,0,0,0.8)" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-      </button>
-      <button
-        class="traffic-dot minimize"
-        onclick={minimizeToIsland}
-        title="最小化"
-        aria-label="最小化到岛"
-      >
-        <svg width="8" height="8" viewBox="0 0 12 12">
-          <line x1="2" y1="6" x2="10" y2="6" stroke="rgba(80,60,0,0.8)" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-      </button>
-      <button
-        class="traffic-dot collapse"
-        onclick={collapseWindow}
-        title="收起"
-        aria-label="收起面板"
-      >
-        <svg width="8" height="8" viewBox="0 0 12 12">
-          <polyline points="3 8 6 4 9 8" stroke="rgba(0,60,0,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        </svg>
-      </button>
-    </div>
     <span class="panel-title" data-tauri-drag-region>
-      {current ? panelTitles[current] || "" : ""}
+      {panelTitle}
     </span>
-    <div class="traffic-spacer"></div>
+    <button class="close-btn" onclick={collapseWindow} title="关闭面板" aria-label="关闭面板">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="6" y1="6" x2="18" y2="18"/>
+        <line x1="18" y1="6" x2="6" y2="18"/>
+      </svg>
+    </button>
   </div>
 
-  <div class="flex-1 overflow-hidden px-4 pb-4">
+  <div class="flex-1 overflow-hidden px-4 pb-4 pt-2">
     {#if current === "notes"}
       <div class="panel-content"><NotesPanel /></div>
     {:else if current === "todo"}
@@ -107,7 +92,7 @@
     left: 14px;
     right: 14px;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+    background: var(--color-border-subtle);
   }
 
   .panel-title {
@@ -115,92 +100,41 @@
     text-align: center;
     font-size: 11px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.45);
+    color: var(--color-text-secondary);
     letter-spacing: 0.06em;
-    text-transform: uppercase;
   }
 
-  .traffic-spacer {
-    width: 58px;
-    flex-shrink: 0;
-  }
-
-  .traffic-lights {
-    display: flex;
-    gap: 7px;
-    flex-shrink: 0;
-  }
-
-  .traffic-dot {
+  .close-btn {
     width: 24px;
     height: 24px;
-    border-radius: 50%;
+    border-radius: 6px;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
     background: transparent;
-    transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-                filter 0.15s ease;
+    color: var(--color-text-muted);
+    transition: all 0.15s ease;
+    flex-shrink: 0;
   }
 
-  .traffic-dot::after {
-    content: '';
-    position: absolute;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
+  .close-btn:hover {
+    color: var(--color-text-primary);
+    background: var(--color-border-subtle);
   }
 
-  .traffic-dot:active {
-    transform: scale(0.85);
-  }
-
-  .traffic-dot svg {
-    opacity: 0;
-    transition: opacity 0.12s;
-    position: relative;
-    z-index: 1;
-  }
-
-  .traffic-lights:hover .traffic-dot svg {
-    opacity: 1;
-  }
-
-  .traffic-dot.close::after {
-    background: #ff5f57;
-    box-shadow: 0 0 4px rgba(255, 95, 87, 0.3);
-  }
-
-  .traffic-dot.minimize::after {
-    background: #febc2e;
-    box-shadow: 0 0 4px rgba(254, 188, 46, 0.3);
-  }
-
-  .traffic-dot.collapse::after {
-    background: #28c840;
-    box-shadow: 0 0 4px rgba(40, 200, 64, 0.3);
-  }
-
-  .traffic-dot:hover {
-    transform: scale(1.2);
-    filter: brightness(1.15);
+  .close-btn:active {
+    transform: scale(0.9);
   }
 
   .panel-content {
-    animation: panel-enter 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+    height: 100%;
+    animation: panel-enter 0.2s ease both;
   }
 
   @keyframes panel-enter {
-    from {
-      opacity: 0;
-      transform: translateY(6px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 </style>

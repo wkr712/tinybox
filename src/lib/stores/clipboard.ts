@@ -99,6 +99,12 @@ export async function copyToClipboard(text: string) {
   await invoke("clipboard_write_text", { text });
 }
 
+export async function setClipboardMonitorPaused(paused: boolean) {
+  try {
+    await invoke("clipboard_set_monitor_paused", { paused });
+  } catch {}
+}
+
 export function getFilteredItems(
   items: ClipboardItem[],
   query: string

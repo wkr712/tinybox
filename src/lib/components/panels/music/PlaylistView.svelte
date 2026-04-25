@@ -41,7 +41,7 @@
         class="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/[0.04] active:scale-[0.99] transition-all text-left"
       >
         <img
-          src={pl.cover_img_url + "?param=80y80"}
+          src={(pl.cover_img_url || '') + "?param=80y80"}
           alt=""
           class="w-9 h-9 rounded object-cover shrink-0"
           loading="lazy"

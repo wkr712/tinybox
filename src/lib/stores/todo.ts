@@ -63,6 +63,13 @@ export function updateDurations(workMin: number, breakMin: number) {
   DURATIONS.work = workMin * 60;
   DURATIONS.break = breakMin * 60;
   DURATIONS.long_break = breakMin * 3 * 60;
+
+  // If timer is idle, update total and remaining to match new duration
+  if (get(timerState) === "idle") {
+    const phase = get(timerPhase);
+    timerTotal.set(DURATIONS[phase]);
+    timerSeconds.set(DURATIONS[phase]);
+  }
 }
 
 export function setPhase(phase: PomodoroPhase) {

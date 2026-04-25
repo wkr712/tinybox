@@ -1,10 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { get } from "svelte/store";
-  import { activePanel, expandWindow, collapseWindow, minimized, restoreFromIsland, minimizeToIsland, minimizeToCat, restoreFromCat, expandIslandForLyrics, shrinkIslandFromLyrics } from "../../stores/app";
-  import { currentSong, isPlaying, pauseMusic, resumeMusic, tracks, playSong, lyrics } from "../../stores/music";
-  import IslandLyrics from "./IslandLyrics.svelte";
-  import CatMascot from "./CatMascot.svelte";
+  import { activePanel, expandWindow, collapseWindow, resetWindow, minimizeToPlayer, minimizeToEdge } from "../../stores/app";
+  import { currentSong, isPlaying, pauseMusic, resumeMusic } from "../../stores/music";
 
   const panels = [
     {
@@ -34,35 +31,21 @@
   ];
 
   let current = $state<string | null>(null);
-  let isMinimized = $state(false);
   let song = $state<any>(null);
   let playing = $state(false);
-  let lrc = $state<any[]>([]);
   let mounted = $state(false);
-  let catClicked = $state(0);
   let unsubs: (() => void)[] = [];
 
   onMount(() => {
     unsubs.push(activePanel.subscribe((v) => (current = v)));
     unsubs.push(currentSong.subscribe((v) => (song = v)));
     unsubs.push(isPlaying.subscribe((v) => (playing = v)));
-    unsubs.push(minimized.subscribe((v) => (isMinimized = v)));
-    unsubs.push(lyrics.subscribe((v) => (lrc = v)));
     requestAnimationFrame(() => { mounted = true; });
   });
 
   onDestroy(() => {
     unsubs.forEach((u) => u());
     unsubs = [];
-  });
-
-  $effect(() => {
-    if (!mounted) return;
-    if (isMinimized && song && playing && lrc.length > 0) {
-      expandIslandForLyrics();
-    } else if (isMinimized) {
-      shrinkIslandFromLyrics();
-    }
   });
 
   async function selectPanel(id: string) {
@@ -75,193 +58,114 @@
 
   async function togglePlay(e: MouseEvent) {
     e.stopPropagation();
-    if (playing) {
-      await pauseMusic();
-    } else {
-      await resumeMusic();
-    }
+    if (playing) await pauseMusic();
+    else await resumeMusic();
   }
 
   function openMusicPanel(e: MouseEvent) {
     e.stopPropagation();
     selectPanel("music");
   }
-
-  async function islandPrev(e: MouseEvent) {
-    e.stopPropagation();
-    const s = get(currentSong);
-    const t = get(tracks);
-    if (!s || !t.length) return;
-    const idx = t.findIndex((tr: any) => tr.id === s.id);
-    if (idx > 0) await playSong(t[idx - 1]);
-  }
-
-  async function islandNext(e: MouseEvent) {
-    e.stopPropagation();
-    const s = get(currentSong);
-    const t = get(tracks);
-    if (!s || !t.length) return;
-    const idx = t.findIndex((tr: any) => tr.id === s.id);
-    if (idx < t.length - 1) await playSong(t[idx + 1]);
-  }
-
-  function handleCatClick() {
-    catClicked++;
-    if (catClicked >= 5) {
-      catClicked = 0;
-      minimizeToIsland();
-    }
-  }
 </script>
 
-<!-- svelte-ignore a11y_no_static_element_interactions -->
-<div
-  class="sidebar-root {isMinimized ? 'cat-mode' : ''}"
-  data-tauri-drag-region
->
-  {#if isMinimized}
-    <!-- Cat mascot minimized state -->
-    <div class="cat-container" data-tauri-drag-region>
-      <!-- svelte-ignore a11y_click_events_have_key_events -->
-      <div class="cat-mascot-wrap" onclick={handleCatClick} role="button" tabindex="0">
-        <CatMascot />
-      </div>
-      {#if song}
-        <div class="cat-mini-controls">
-          <button class="cat-ctrl-btn" onclick={islandPrev} aria-label="上一首">
-            <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4"/><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="3"/></svg>
-          </button>
-          <button class="cat-ctrl-btn play" onclick={togglePlay} aria-label="播放暂停">
-            {#if playing}
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-            {:else}
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            {/if}
-          </button>
-          <button class="cat-ctrl-btn" onclick={islandNext} aria-label="下一首">
-            <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="3"/></svg>
-          </button>
-        </div>
-        <div class="cat-song-name">{song.name}</div>
-      {/if}
-      <button class="cat-restore" onclick={() => restoreFromCat()} aria-label="恢复">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-          <polyline points="15 18 9 12 15 6"></polyline>
-        </svg>
-      </button>
-      {#if catClicked > 0}
-        <div class="cat-click-hint">{5 - catClicked} 次点击进入小岛模式</div>
-      {/if}
-    </div>
-  {:else}
-    <div class="sidebar-inner">
-      <!-- Top accent line -->
-      <div class="sidebar-accent" data-tauri-drag-region></div>
+<div class="sidebar-inner">
+  <div class="sidebar-accent" data-tauri-drag-region></div>
 
-      <!-- Main icons -->
-      <div class="sidebar-icons">
-        {#each panels.slice(0, 4) as panel, i (panel.id)}
-          <button
-            class="sidebar-icon {current === panel.id ? 'active' : ''} {mounted ? 'icon-enter' : ''}"
-            style="transition-delay: {i * 50}ms"
-            onclick={() => selectPanel(panel.id)}
-            title={panel.label}
-            aria-label={panel.label}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-              {@html panel.svg}
-            </svg>
-          </button>
-        {/each}
-      </div>
-
-      <div class="sidebar-divider"></div>
-
-      <!-- Bottom icons (music + settings) -->
-      <div class="sidebar-icons-bottom">
-        {#each panels.slice(4) as panel, i (panel.id)}
-          <button
-            class="sidebar-icon {current === panel.id ? 'active' : ''} {mounted ? 'icon-enter' : ''}"
-            style="transition-delay: {(i + 4) * 50}ms"
-            onclick={() => selectPanel(panel.id)}
-            title={panel.label}
-            aria-label={panel.label}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-              {@html panel.svg}
-            </svg>
-          </button>
-        {/each}
-
-        {#if song && current !== "music"}
-          <button
-            onclick={openMusicPanel}
-            class="mini-player {mounted ? 'icon-enter' : ''}"
-            title="{song.name} - {song.artists}"
-            style="transition-delay: 350ms"
-            aria-label="打开音乐面板"
-          >
-            <img src={(song.pic_url || '') + '?param=80y80'} alt="" class="mini-cover" />
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <div class="mini-overlay" role="button" tabindex="-1" onclick={togglePlay} aria-label="播放暂停">
-              {#if playing}
-                <svg class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-              {:else}
-                <svg class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              {/if}
-            </div>
-          </button>
-        {/if}
-      </div>
-
-      <!-- Spacer pushes minimize to bottom -->
-      <div class="sidebar-spacer" data-tauri-drag-region></div>
-
-      <!-- Minimize to cat -->
+  <div class="sidebar-icons">
+    {#each panels.slice(0, 4) as panel, i (panel.id)}
       <button
-        class="sidebar-minimize-btn"
-        onclick={() => minimizeToCat()}
-        title="最小化"
-        aria-label="最小化"
+        class="sidebar-icon {current === panel.id ? 'active' : ''} {mounted ? 'icon-enter' : ''}"
+        style="transition-delay: {i * 50}ms"
+        onclick={() => selectPanel(panel.id)}
+        title={panel.label}
+        aria-label={panel.label}
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-          <line x1="5" y1="12" x2="19" y2="12"/>
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          {@html panel.svg}
         </svg>
       </button>
-    </div>
-  {/if}
+    {/each}
+  </div>
+
+  <div class="sidebar-divider"></div>
+
+  <div class="sidebar-icons-bottom">
+    {#each panels.slice(4) as panel, i (panel.id)}
+      <button
+        class="sidebar-icon {current === panel.id ? 'active' : ''} {mounted ? 'icon-enter' : ''}"
+        style="transition-delay: {(i + 4) * 50}ms"
+        onclick={() => selectPanel(panel.id)}
+        title={panel.label}
+        aria-label={panel.label}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          {@html panel.svg}
+        </svg>
+      </button>
+    {/each}
+
+    {#if song && current !== "music"}
+      <button
+        onclick={openMusicPanel}
+        class="mini-player {mounted ? 'icon-enter' : ''}"
+        title="{song.name} - {song.artists}"
+        style="transition-delay: 350ms"
+        aria-label="打开音乐面板"
+      >
+        <img src={(song.pic_url || '') + '?param=80y80'} alt="" class="mini-cover" />
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <div class="mini-overlay" role="button" tabindex="-1" onclick={togglePlay} aria-label="播放暂停">
+          {#if playing}
+            <svg class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          {:else}
+            <svg class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          {/if}
+        </div>
+      </button>
+    {/if}
+  </div>
+
+  <div class="sidebar-spacer" data-tauri-drag-region></div>
+
+  <!-- Reset button -->
+  <button
+    class="sidebar-minimize-btn"
+    onclick={resetWindow}
+    title="复位"
+    aria-label="复位窗口"
+  >
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+      <path d="M3 3v5h5"/>
+    </svg>
+  </button>
+
+  <!-- Minimize button -->
+  <button
+    class="sidebar-minimize-btn"
+    onclick={() => {
+      if (song && playing) minimizeToPlayer();
+      else minimizeToEdge();
+    }}
+    title="最小化"
+    aria-label="最小化"
+  >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+      <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+  </button>
 </div>
 
 <style>
-  .sidebar-root {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 0;
-    width: 52px;
-    flex-shrink: 0;
-    height: 100%;
-    position: relative;
-    z-index: 2;
-    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .sidebar-root.cat-mode {
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    justify-content: center;
-    align-items: center;
-  }
-
   .sidebar-inner {
     display: flex;
     flex-direction: column;
     align-items: center;
     height: 100%;
-    width: 100%;
+    width: 52px;
     padding: 10px 0 8px;
+    flex-shrink: 0;
   }
 
   .sidebar-accent {
@@ -270,8 +174,7 @@
     border-radius: 1px;
     background: linear-gradient(90deg, var(--color-accent-primary), var(--color-accent-secondary));
     margin-bottom: 10px;
-    opacity: 0.6;
-    box-shadow: 0 0 6px color-mix(in srgb, var(--color-accent-primary) 15%, transparent);
+    opacity: 0.5;
   }
 
   .sidebar-icons {
@@ -324,127 +227,6 @@
     transform: scale(0.85);
   }
 
-  /* Cat mascot minimized state */
-  .cat-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    gap: 4px;
-    padding: 8px 4px;
-    animation: cat-appear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  @keyframes cat-appear {
-    0% { opacity: 0; transform: scale(0.6) rotate(-10deg); }
-    60% { transform: scale(1.08) rotate(2deg); }
-    100% { opacity: 1; transform: scale(1) rotate(0deg); }
-  }
-
-  .cat-mascot-wrap {
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-    cursor: pointer;
-    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  .cat-mascot-wrap:hover {
-    transform: scale(1.12);
-  }
-
-  .cat-mascot-wrap:active {
-    transform: scale(0.9);
-  }
-
-  .cat-mini-controls {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-  }
-
-  .cat-ctrl-btn {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: rgba(255, 255, 255, 0.3);
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .cat-ctrl-btn.play {
-    width: 18px;
-    height: 18px;
-    color: rgba(255, 255, 255, 0.5);
-    background: rgba(255, 255, 255, 0.06);
-  }
-
-  .cat-ctrl-btn:hover {
-    color: color-mix(in srgb, var(--color-accent-primary) 80%, transparent);
-    background: color-mix(in srgb, var(--color-accent-primary) 10%, transparent);
-  }
-
-  .cat-ctrl-btn:active {
-    transform: scale(0.8);
-  }
-
-  .cat-song-name {
-    font-size: 8px;
-    color: rgba(255, 255, 255, 0.3);
-    text-align: center;
-    max-width: 48px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .cat-restore {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: rgba(255, 255, 255, 0.2);
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .cat-restore:hover {
-    color: color-mix(in srgb, var(--color-accent-primary) 70%, transparent);
-    background: color-mix(in srgb, var(--color-accent-primary) 6%, transparent);
-  }
-
-  .cat-restore:active {
-    transform: scale(0.85);
-  }
-
-  .cat-click-hint {
-    font-size: 7px;
-    color: rgba(255, 255, 255, 0.15);
-    position: absolute;
-    bottom: 4px;
-    text-align: center;
-    animation: hint-fade 2s ease forwards;
-  }
-
-  @keyframes hint-fade {
-    0% { opacity: 0; }
-    20% { opacity: 1; }
-    80% { opacity: 1; }
-    100% { opacity: 0; }
-  }
-
-  /* Mini player in sidebar */
   .mini-player {
     position: relative;
     width: 38px;
@@ -453,14 +235,12 @@
     overflow: hidden;
     flex-shrink: 0;
     border: 1px solid color-mix(in srgb, var(--color-accent-primary) 15%, transparent);
-    box-shadow: 0 0 10px color-mix(in srgb, var(--color-accent-primary) 8%, transparent);
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: all 0.2s ease;
   }
 
   .mini-player:hover {
     border-color: color-mix(in srgb, var(--color-accent-primary) 35%, transparent);
-    box-shadow: 0 0 16px color-mix(in srgb, var(--color-accent-primary) 20%, transparent);
     transform: scale(1.05);
   }
 
